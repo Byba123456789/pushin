@@ -1,0 +1,17 @@
+{
+  "needs": ["food", "clean", "energy", "fun", "potty"],
+  "decayPerHour": { "food": 6, "clean": 3, "energy": 5, "fun": 5, "potty": 4 },
+  "sleepEnergyPerHour": 25,
+  "offlineFactor": 0.4,
+  "floor": 15,
+  "maxOfflineHours": 48,
+  "wantAt": 40,
+  "urgentAt": 20,
+  "notify": {
+    "at": 30,
+    "minGapHours": 3,
+    "quietFrom": 23,
+    "quietTo": 9,
+    "tzOffsetHours": 3
+  }
+}

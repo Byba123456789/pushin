@@ -1,0 +1,15 @@
+:root {
+  --px: 2px;
+  --ink: #4b2e1e;
+  --paper: #fff7ef;
+  --pink: #f59ab5;
+  --mint: #9fdcc8;
+  --sky: #a9d4f5;
+  --butter: #ffe08a;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #fbe9e1; touch-action: none; }
+body { font-family: 'Nunito', system-ui, sans-serif; color: var(--ink); }
+#game { display: block; margin: 0 auto; }
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui > * { pointer-events: auto; }
