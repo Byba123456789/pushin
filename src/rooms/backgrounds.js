@@ -1049,26 +1049,99 @@ function bdSwitch(F) {
   for (const y of [-60.8, -46.2]) el(128, F + y, 0.55, 0.55, '#c9b79c', 0);
 }
 
-function bdBed(F, b) {
-  const x = b.x + b.w / 2;
-  const y = b.y + b.h / 2;
-  const rx = b.w / 2;
-  const ry = b.h / 2;
-  shade(x, b.y + b.h + 1.2, rx + 1);
-  btScallop(x, y, rx, ry, 18, 0.05, PINK, 1.3);
-  for (let i = 0; i < 18; i++) {
-    const a = ((i + 0.5) * TAU) / 18 + 0.17;
-    ln(0.6, '#e690a8', x + Math.cos(a) * (rx - 11), y + Math.sin(a) * (ry - 4.6), x + Math.cos(a) * (rx - 3.5), y + Math.sin(a) * (ry - 1.4));
+function bedGeo(b) {
+  const cy = b.y + b.h / 2;
+  return { x: b.x + b.w / 2, rx: b.w / 2, top: cy - 5, base: cy + 3, ryT: 10, ryB: 11, inX: 43, inY: 5.6 };
+}
+
+function bedWall(g) {
+  const { x, rx, top, base, ryT, ryB } = g;
+  c.beginPath();
+  c.moveTo(x - rx, top);
+  c.quadraticCurveTo(x - rx - 2.4, (top + base) / 2, x - rx, base);
+  c.ellipse(x, base, rx, ryB, 0, Math.PI, 0, true);
+  c.quadraticCurveTo(x + rx + 2.4, (top + base) / 2, x + rx, top);
+  c.ellipse(x, top, rx, ryT, 0, 0, Math.PI);
+  c.closePath();
+  const grad = c.createLinearGradient(0, top, 0, base + ryB);
+  grad.addColorStop(0, '#f7aabb');
+  grad.addColorStop(1, '#e3819c');
+  paint(grad, 1.3);
+  for (const a of [0.28, 0.62, 0.9, 1.25, 1.55, 1.89, 2.2, 2.52, 2.86]) {
+    const px = x + Math.cos(a) * (rx - 0.6);
+    ln(0.6, '#d36f8c', px, top + Math.sin(a) * ryT + 1.6, px - Math.cos(a) * 0.6, base + Math.sin(a) * ryB - 2.2);
   }
-  btRing(x, y, rx - 5.2, ry - 2.3, '#fff3f6', 0.7, [1.6, 1.6]);
-  el(x, y + 0.6, rx - 10.5, ry - 4.4, '#f2b6c6', 1);
-  el(x, y + 1.8, rx - 12.5, ry - 6.4, '#fff0f4', 0);
-  btStroke(x, y, `M${-rx + 16} ${-ry + 5.6}Q${-rx + 24} ${-ry + 3.8} ${-rx + 36} ${-ry + 3.6}`, '#ffffff', 0.9);
-  rr(x - 28, y - 5.2, 15, 7.4, 3.6, LILAC, 1);
-  btStroke(x - 28, y - 5.2, 'M2 1.6q5-1.2 10 0', '#ffffff', 0.7);
-  star(x - 20.5, y - 1.5, 0.45, BUTTER);
-  heart(x + 14, y + 2.6, 0.7, '#f6a5b6');
-  heart(x + 22, y + 1.4, 0.45, '#f6a5b6');
+  btStroke(x - rx + 5, top + 5, 'M0 0Q1 5 5 8.4', '#ffffff', 0.9);
+}
+
+function bedRimFront(g) {
+  const { x, rx, top, ryT, inX, inY } = g;
+  c.beginPath();
+  c.ellipse(x, top, rx, ryT, 0, 0, Math.PI);
+  c.ellipse(x, top, inX, inY, 0, Math.PI, 0, true);
+  c.closePath();
+  c.fillStyle = '#fcd3dd';
+  c.fill();
+  for (const [ex, ey, a0, a1, ccw] of [[rx, ryT, 0, Math.PI, false], [inX, inY, Math.PI, 0, true]]) {
+    c.beginPath();
+    c.ellipse(x, top, ex, ey, 0, a0, a1, ccw);
+    line(1.3);
+  }
+  c.beginPath();
+  c.ellipse(x, top, (rx + inX) / 2, (ryT + inY) / 2, 0, 0.12, Math.PI - 0.12);
+  c.setLineDash([1.6, 1.6]);
+  line(0.7, '#e98aa4');
+  c.setLineDash([]);
+  btStroke(x, top, `M${-rx * 0.62} ${ryT * 0.72}Q${-rx * 0.4} ${ryT * 0.9} ${-rx * 0.2} ${ryT * 0.93}`, '#ffffff', 0.9);
+}
+
+function bedInside(g) {
+  const { x, top, inX, inY } = g;
+  c.beginPath();
+  c.ellipse(x, top, inX, inY, 0, 0, TAU);
+  paint('#e2859f', 0);
+  c.save();
+  c.clip();
+  el(x, top + 2.6, inX - 2.4, inY - 0.4, '#fff0f4', 0);
+  el(x, top + 3.8, inX - 8, inY - 2, '#fbdbe4', 0);
+  rr(x - 36, top - 3.2, 14, 6.4, 3.2, LILAC, 1);
+  btStroke(x - 36, top - 3.2, 'M2 1.4q5-1.2 9.6 0', '#ffffff', 0.7);
+  star(x - 29, top + 0.4, 0.45, BUTTER);
+  heart(x + 14, top + 3.2, 0.7, '#f6a5b6');
+  heart(x + 22, top + 2.2, 0.45, '#f6a5b6');
+  c.beginPath();
+  c.ellipse(x, top, inX, inY, 0, 0, TAU);
+  line(4, 'rgba(176,78,110,0.28)');
+  c.restore();
+  c.beginPath();
+  c.ellipse(x, top, inX, inY, 0, 0, TAU);
+  line(1.3);
+}
+
+function bedFront(g) {
+  bedWall(g);
+  bedRimFront(g);
+  c.beginPath();
+  c.ellipse(g.x, g.top, g.inX, g.inY, 0, 0.02, Math.PI - 0.02);
+  line(1.3);
+}
+
+function bdBed(F, b) {
+  const g = bedGeo(b);
+  const { x, rx, top, ryT, inX, inY } = g;
+  el(x, g.base + g.ryB + 0.4, rx + 5, 3.8, SHADOW, 0);
+  el(x, g.base + g.ryB - 0.4, rx + 1, 2.6, 'rgba(75,46,30,0.12)', 0);
+  bedWall(g);
+  c.beginPath();
+  c.ellipse(x, top, rx, ryT, 0, 0, TAU);
+  paint('#fcd3dd', 1.3);
+  c.beginPath();
+  c.ellipse(x, top, (rx + inX) / 2, (ryT + inY) / 2, 0, 0, TAU);
+  c.setLineDash([1.6, 1.6]);
+  line(0.7, '#e98aa4');
+  c.setLineDash([]);
+  bedInside(g);
+  bedRimFront(g);
 }
 
 function bdRug(F) {
@@ -1240,7 +1313,7 @@ export function drawLife(ctx, name, L, t, f) {
   }
 }
 
-export function drawDark(ctx, L, H, t) {
+export function drawDark(ctx, L, H, t, curtainsClosed) {
   c = ctx;
   const F = L.F;
   c.fillStyle = 'rgba(30, 24, 66, 0.62)';
@@ -1250,12 +1323,14 @@ export function drawDark(ctx, L, H, t) {
   g.addColorStop(1, 'rgba(255, 214, 140, 0)');
   c.fillStyle = g;
   c.fillRect(80, F - 140, 100, 160);
-  c.save();
-  c.translate(6, F + 10);
-  c.transform(1, 0, 0.8, 1, 0, 0);
-  c.fillStyle = 'rgba(190, 200, 255, 0.13)';
-  for (const [x, y] of [[0, 0], [21, 0], [0, 22], [21, 22]]) c.fillRect(x, y, 19, 20);
-  c.restore();
+  if (!curtainsClosed) {
+    c.save();
+    c.translate(6, F + 10);
+    c.transform(1, 0, 0.8, 1, 0, 0);
+    c.fillStyle = 'rgba(190, 200, 255, 0.13)';
+    for (const [x, y] of [[0, 0], [21, 0], [0, 22], [21, 22]]) c.fillRect(x, y, 19, 20);
+    c.restore();
+  }
   lamp(F, true);
   stars(L, t);
 }
@@ -1312,25 +1387,7 @@ export function drawSponge(ctx, x, y) {
 
 export function drawBedFront(ctx, L) {
   c = ctx;
-  const b = L.bedroom.bed;
-  const x = b.x + b.w / 2;
-  const y = b.y + b.h / 2;
-  const rx = b.w / 2;
-  const ry = b.h / 2;
-  c.beginPath();
-  c.ellipse(x, y, rx, ry, 0, 0.12, Math.PI - 0.12);
-  c.ellipse(x, y - 2, rx - 10, ry - 8, 0, Math.PI - 0.15, 0.15, true);
-  c.closePath();
-  c.fillStyle = PINK;
-  c.fill();
-  c.lineWidth = 1.3;
-  c.strokeStyle = INK;
-  c.stroke();
-  c.beginPath();
-  c.ellipse(x, y + 1, rx - 4.6, ry - 3, 0, 0.3, Math.PI - 0.3);
-  c.setLineDash([1.6, 1.6]);
-  line(0.7, '#fff3f6');
-  c.setLineDash([]);
+  bedFront(bedGeo(L.bedroom.bed));
 }
 
 export function drawFoam(ctx, x, y, s) {

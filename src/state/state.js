@@ -1,4 +1,4 @@
-import { FOOD, OUTFITS, XP, DAILY_BONUS, GIFT, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
+import { FOOD, OUTFITS, XP, DAILY_BONUS, GIFT, HOME_ACTS, WATER_GAP_HOURS, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
 
 const KEY = 'pushin.v1';
 const SAVE_DELAY_MS = 2000;
@@ -13,6 +13,7 @@ const SLEEP_XP_HOURS = 0.5;
 const MAX_LEVEL = 50;
 const FRIEND_NAME_MAX = 16;
 const HOUR_MS = 3600 * 1000;
+const WATER_GAP_MS = WATER_GAP_HOURS * HOUR_MS;
 // fetch вместо import-атрибутов JSON: их нет в старых WebView Telegram
 const rules = await (await fetch(new URL('./rules.json' + new URL(import.meta.url).search, import.meta.url))).json();
 
@@ -30,8 +31,8 @@ const freshState = () => ({
   needs: { food: 80, clean: 80, energy: 80, fun: 80, potty: 80 },
   coins: 50, xp: 0, level: 1, owned: [], equipped: { head: null, eyes: null, body: null },
   sleeping: false, feeds: 0, best: 0, giftSeen: false, streak: 0, lastDaily: null,
-  sleptHours: 0, infCoins: false, friend: { name: null, equipped: { head: null, eyes: null, body: null } },
-  lastSeen: clock(), version: 1, schema: SCHEMA,
+  sleptHours: 0, curtainsClosed: false, lastBrush: 0, infCoins: false, friend: { name: null, equipped: { head: null, eyes: null, body: null } },
+  wateredAt: 0, lastSeen: clock(), version: 1, schema: SCHEMA,
 });
 
 let s = freshState();
@@ -253,6 +254,49 @@ export function potty() {
 export function play(amount) {
   s.needs.fun = clamp(s.needs.fun + amount);
   addXp(XP.play);
+  changed();
+}
+
+export function readBook() {
+  s.needs.fun = clamp(s.needs.fun + rules.readFun);
+  addXp(XP.read);
+  changed();
+}
+
+export const canBrush = () => clock() - s.lastBrush >= rules.brushGapHours * HOUR_MS;
+
+export function brushTeeth() {
+  if (!canBrush()) return false;
+  s.needs.clean = clamp(s.needs.clean + rules.brushClean);
+  s.lastBrush = clock();
+  addXp(XP.brush);
+  changed();
+  return true;
+}
+
+export function homeAct(id) {
+  const a = HOME_ACTS[id];
+  if (!a) return false;
+  s.needs.food = clamp(s.needs.food + (a.food ?? 0));
+  s.needs.fun = clamp(s.needs.fun + (a.fun ?? 0));
+  addXp(a.xp);
+  changed();
+  return true;
+}
+
+export function canWater() {
+  const gone = clock() - s.wateredAt;
+  return gone < 0 || gone >= WATER_GAP_MS;
+}
+
+export function water() {
+  if (!canWater()) return false;
+  s.wateredAt = clock();
+  return homeAct('water');
+}
+
+export function setCurtains(closed) {
+  s.curtainsClosed = closed;
   changed();
 }
 

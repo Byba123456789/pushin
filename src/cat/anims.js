@@ -292,8 +292,8 @@ const pillowsleep = [
   ...rep(3, [f(450, { ...PS, eyes: 'sleep', fx: 'zzz', fxp: 0.5 }), f(150, { ...PS, eyes: 'sleep', sh: 5.2 }), f(450, { ...PS, eyes: 'sleep', sh: 4.8, sw: 2.6 }), f(150, { ...PS, eyes: 'sleep', sh: 5.4 })]),
 ];
 
-const LT = { prop: 'laptop', sh: 2 };
-const laptop = rep(4, [f(90, { ...LT, pL: [12, 14], pR: [20, 15] }), f(90, { ...LT, pL: [12, 15], pR: [20, 13] }), f(90, { ...LT, pL: [13, 13], pR: [20, 15], look: [1, 1] }), f(150, { ...LT, look: [1, 1] })]);
+const LT = { prop: 'laptop', sh: 2, mouth: 'flat', brows: 'flat', look: [0, 1] };
+const laptop = rep(4, [f(110, { ...LT, pv: 0 }), f(90, { ...LT, pv: 1 }), f(110, { ...LT, pv: 2, eyes: 'half' }), f(90, { ...LT, pv: 3 }), f(150, { ...LT, pv: 0, look: [1, 1] })]);
 
 const BL = { prop: 'blanket', eyes: 'closed', sh: 3 };
 const blanket = rep(3, [f(300, BL), f(150, { ...BL, sh: 2.4 }), f(300, { ...BL, sh: 2, sw: 0.6 }), f(150, { ...BL, sh: 2.6 })]);
@@ -307,6 +307,54 @@ const lights = rep(3, [f(300, { ...LI, pv: 0 }), f(300, { ...LI, pv: 1, sh: -0.5
 const HG = { ...PEAR, eyes: 'happy', blush: 1, fp: null, pR: [28, 8] };
 const hug = rep(4, [f(160, { ...HG, rot: 0.03 }), f(160, { ...HG, rot: 0.05, fx: 'heart', fxp: 0.3 }), f(160, { ...HG, rot: 0.03 }), f(160, { ...HG, rot: 0.01 })]);
 
+const WT = { ...PEAR, look: [1, -0.9], tail: -165 };
+const watch = [
+  f(500, WT), f(140, { ...WT, sh: 0.6, tail: -158 }), f(420, { ...WT, mouth: 'open', tail: -150 }), f(140, { ...WT, sh: 0.4 }),
+  f(560, { ...WT, eyes: 'happy', tail: -156 }), f(140, { ...WT, eyes: 'closed' }),
+];
+
+const SP = { ...PEAR, fp: null, pL: [16, 16], pR: [27, 15], eyes: 'content', mouth: 'w' };
+const sip = [
+  f(260, { ...SP, pL: [12, 22], pR: [24, 21] }), f(320, { ...SP, pL: [14, 18], pR: [25, 17] }),
+  ...rep(3, [f(320, { ...SP, sh: 0.8, rot: 0.03 }), f(260, { ...SP, mouth: 'chew' }), f(260, { ...SP, eyes: 'happy', sh: 0.3 })]),
+  f(240, { ...SP, eyes: 'happy', mouth: 'open', fx: 'heart', fxp: 0.6 }),
+];
+
+const RC = { ...PEAR, fp: null, eyes: 'dot', look: [1, 0.5], tail: -160 };
+const reach = [
+  f(200, { ...RC, pR: [26, 14] }), f(180, { ...RC, pR: [31, 18], sh: 0.8 }), f(200, { ...RC, pR: [32, 24], sh: 1.4 }),
+  f(180, { ...RC, pR: [28, 16] }),
+];
+
+const PR = { ...PEAR, fp: null, eyes: 'dot', look: [1, 0.7], tail: -158 };
+const pour = [
+  f(240, { ...PR, pL: [16, 14], pR: [27, 13] }), f(240, { ...PR, pL: [18, 12], pR: [29, 11], sh: 0.6 }),
+  f(240, { ...PR, pL: [16, 14], pR: [27, 13], tail: -150 }), f(240, { ...PR, pL: [18, 12], pR: [29, 11], eyes: 'happy' }),
+];
+
+const RB = { prop: 'read', tail: -165 };
+const readbook = rep(2, [
+  ...tailWag.map((t, i) => f(180, { ...RB, tail: t, look: [i % 3 === 2 ? 1 : 0.4, 1] })),
+  f(150, { ...RB, pv: 1, look: [-0.6, 1] }), f(150, { ...RB, pv: 2, look: [-0.6, 1] }),
+  ...tailWag.map((t, i) => f(180, { ...RB, tail: t, eyes: i === 3 ? 'content' : 'dot', look: [i % 3 === 2 ? -0.4 : 0.6, 1] })),
+  f(150, { ...RB, pv: 1, look: [0.6, 1] }), f(150, { ...RB, pv: 2, look: [0.6, 1] }),
+]);
+
+const PK = { eyes: 'dot', mouth: 'w', fp: null, sh: 2, tail: -165 };
+const pick = [f(180, { ...PK, pR: [24, 14] }), f(180, { ...PK, pR: [28, 18], sh: 3 }), f(180, { ...PK, pR: [24, 14] }), f(180, { ...PK, pR: [20, 12], look: [1, 0.6] })];
+
+const RU = { eyes: 'dot', mouth: 'open', fp: null, tail: -140, ea: -4 };
+const reachUp = [f(160, { ...RU, pR: [18, -22] }), f(160, { ...RU, pR: [22, -30], oy: -2, sh: -1 }), f(160, { ...RU, pR: [18, -22] }), f(160, { ...RU, pR: [22, -30], oy: -2, sh: -1 })];
+
+const BT = { eyes: 'happy', mouth: 'w', fp: null, brows: null, tail: -160 };
+const brushteeth = [f(90, { ...BT, pR: [16, 6] }), f(90, { ...BT, pR: [22, 6], x: 0.5 }), f(90, { ...BT, pR: [16, 6] }), f(90, { ...BT, pR: [22, 6], x: 0.5, fx: 'bubble', fxp: 0.4 })];
+
+const SPT = { ...PEAR, eyes: 'x', mouth: 'open', brows: null, fp: null };
+const spit = [f(220, { ...SPT, sh: 2 }), f(260, { ...SPT, sh: 3, rot: 0.08 }), f(160, { ...SPT, sh: 1, rot: 0.03 }), f(200, { eyes: 'happy', mouth: 'w' })];
+
+const SM = { eyes: 'happy', mouth: 'open', blush: 1 };
+const smile = [f(220, { ...SM, sh: -0.6 }), f(220, { ...SM, sh: 0.4, fx: 'sparkle', fxp: 0.7 }), f(220, { ...SM, sh: -0.6 }), f(300, { ...SM, sh: 0.4, tail: -125 })];
+
 const sit = seq([{ tail: -165 }, { sh: 0.6, tail: -158 }, { sh: 0.8, tail: -150 }, { sh: 0.4, tail: -158 }], 200, PEAR);
 const walk = run.map((fr) => f(fr.ms * 1.6, { ...fr.p, oy: fr.p.oy / 2 }));
 
@@ -314,6 +362,8 @@ export const ANIMS = {
   wave, happy, sad, angry, run, jump, fly, gaming, dance1, dance2, dance3, eat, chew, yawn, sleep: SLEEP, wash, shake,
   potty, pet, bellyup, sneeze, lookback, surprised, read, music, piano, box, yarn, cake, donut, fastfood, cool, shy,
   laugh, wow, shocked, grumpy, cry, love, ball, pillowsleep, laptop, blanket, paint, lights, hug, sit, walk,
+  watch, sip, reach, pour,
+  readbook, pick, reachUp, brushteeth, spit, smile,
 };
 
 export const MOODY = new Set(['idle', 'run', 'walk', 'jump', 'fly', 'gaming', 'lookback', 'sit']);

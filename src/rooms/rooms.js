@@ -5,7 +5,9 @@ import { createFriend } from '../cat/friend.js';
 import { sfx, music, setMuted, isMuted } from '../audio/audio.js';
 import { GIFT, FRIENDS } from '../state/catalog.js';
 import { layout, background, drawLife, drawDark, drawScreen, drawShower, drawSponge, drawFoam, drawBowl, drawBedFront } from './backgrounds.js';
+import { drawCurtains, drawWindowDay, drawWindowLight, drawBookIn, drawDrawer, drawBrush, drawShelfBrush, drawMouthFoam, drawGrin, BOOK_HAND, MOUTH, READ_OFFSET, BRUSH_STAND } from './act-bed-bath.js';
 import { iconImage } from './icons.js';
+import { drawActBack, drawActFront, drawPlant, plantAt, plantLook, plantAnim } from './act-kitchen-living.js';
 import { createUI } from './ui.js';
 import { t, friendLabel, userName, phrases, scenes } from './strings.js';
 
@@ -13,6 +15,10 @@ const ROOMS = ['living', 'kitchen', 'bath', 'bedroom'];
 const DANCES = ['dance1', 'dance2', 'dance3'];
 const POSES = { living: ['read', 'music', 'yarn', 'box', 'laptop', 'blanket'], bedroom: ['read', 'blanket', 'laptop', 'music'], kitchen: [], bath: [] };
 const FOOD_ANIM = { donut: 'donut', cake: 'cake', pizza: 'fastfood' };
+const SNACKS = [{ id: 'donut', anim: 'donut' }, { id: 'cookie', anim: 'chew' }];
+const SPOT = { tea: 118, snack: 70, eat: 118, tv: 100, water: 82 };
+const TV_SEC = 9;
+const TV_REWARD_SEC = 4;
 const CONFETTI = ['#f6a5b6', '#ffd66b', '#9fdcc8', '#a9d4f5', '#c9b3ef'];
 const FRIEND = FRIENDS[0];
 const FRIEND_SCALE = 0.85;
@@ -35,6 +41,7 @@ let seq = 0;
 let switching = false;
 let started = false;
 let busy = null;
+let act = null;
 let walk = null;
 let timers = [];
 let slide = null;
@@ -55,6 +62,15 @@ let screen = false;
 let catHidden = false;
 let lightsOff = false;
 let shower = null;
+let drawerK = 0;
+let drawerOpen = false;
+let bookInDrawer = true;
+let curtainK = 0;
+let fly = null;
+let brushHand = false;
+let brushInCup = true;
+let mouthFoam = 0;
+let grinAt = -1;
 let giftOpen = 0;
 let giftShown = false;
 let bowlFood = null;
@@ -207,17 +223,28 @@ function refreshActions() {
   const list = {
     living: [
       { id: 'console', icon: 'console', label: t('console') },
+      { id: 'tv', icon: 'tv', label: t('tv'), pressed: busy === 'tv' },
       { id: 'dance', icon: 'dance', label: t('dance') },
       { id: 'wardrobe', icon: 'wardrobe', label: t('wardrobe'), pressed: wardrobeOpen },
+      { id: 'water', icon: 'water', label: t('water') },
       ...(giftShown ? [{ id: 'gift', icon: 'gift', label: t('giftBox') }] : []),
     ],
-    kitchen: [{ id: 'fridge', icon: 'fridge', label: t('fridge'), pressed: fridgeOpen }],
+    kitchen: [
+      { id: 'fridge', icon: 'fridge', label: t('fridge'), pressed: fridgeOpen },
+      { id: 'tea', icon: 'tea', label: t('tea') },
+      { id: 'snack', icon: 'snack', label: t('snack') },
+    ],
     bath: [
       { id: 'sponge', icon: 'sponge', label: t('sponge'), pressed: tool === 'sponge' },
       { id: 'rinse', icon: 'rinse', label: t('rinse') },
       { id: 'toilet', icon: 'potty', label: t('toilet') },
+      { id: 'brush', icon: 'tooth', label: t('brush') },
     ],
-    bedroom: [{ id: 'light', icon: lightsOff ? 'light' : 'moon', label: t(lightsOff ? 'lightOn' : 'lightOff') }],
+    bedroom: [
+      { id: 'light', icon: lightsOff ? 'light' : 'moon', label: t(lightsOff ? 'lightOn' : 'lightOff') },
+      { id: 'book', icon: 'book', label: t('book') },
+      { id: 'curtains', icon: 'curtains', label: t(state.get().curtainsClosed ? 'curtainsOpen' : 'curtainsClose') },
+    ],
   };
   ui.setActions(list[room]);
 }
@@ -248,6 +275,7 @@ function resetRoom() {
   timers = [];
   walk = null;
   busy = null;
+  act = null;
   petting = false;
   ptr = null;
   tool = null;
@@ -258,6 +286,15 @@ function resetRoom() {
   screen = false;
   catHidden = false;
   shower = null;
+  drawerK = 0;
+  drawerOpen = false;
+  bookInDrawer = true;
+  curtainK = Number(state.get().curtainsClosed);
+  fly = null;
+  brushHand = false;
+  brushInCup = true;
+  mouthFoam = 0;
+  grinAt = -1;
   giftOpen = 0;
   bowlFood = null;
   bowlHidden = false;
@@ -672,6 +709,122 @@ function wake() {
   refreshActions();
 }
 
+const lerp = (a, b, k) => a + (b - a) * k;
+const bookNest = () => ({ x: 159, y: L.F - 24 });
+const bookHand = () => ({ x: catX + BOOK_HAND.x * cat.facing, y: catY + BOOK_HAND.y });
+const mouthAt = () => ({ x: catX + MOUTH.x * cat.facing, y: catY + MOUTH.y });
+const cupAt = () => ({ x: 133.5, y: L.F - 73 });
+
+function startFly(kind, from, to, dur, grow, cb) {
+  fly = { kind, from, to, dur, t: 0, cb: guard(cb), grow };
+}
+
+function startReading() {
+  if (!free()) return;
+  busy = 'read';
+  walkTo(L.bedroom.lamp.x + READ_OFFSET, guard(() => {
+    cat.facing = 1;
+    cat.play('pick', { loop: true });
+    drawerOpen = true;
+    sfx('pop');
+    after(0.9, () => {
+      bookInDrawer = false;
+      startFly('book', bookNest(), bookHand(), 0.7, [1, 1.5], () => {
+        cat.play('readbook', { loop: true });
+        after(8, () => {
+          cat.play('pick', { loop: true });
+          startFly('book', bookHand(), bookNest(), 0.7, [1.5, 1], () => {
+            bookInDrawer = true;
+            after(0.3, () => {
+              drawerOpen = false;
+              sfx('pop');
+              after(0.8, finishReading);
+            });
+          });
+        });
+      });
+    });
+  }));
+}
+
+function finishReading() {
+  state.readBook();
+  busy = null;
+  if (state.isNight()) {
+    cat.play('yawn');
+    sfx('yawn');
+  } else {
+    cat.play('happy');
+    cat.emit('heart');
+  }
+}
+
+function toggleCurtains() {
+  if (!free()) return;
+  busy = 'curtains';
+  const w = L.bedroom.win;
+  walkTo(w.x + w.w + 4, guard(() => {
+    cat.facing = -1;
+    cat.play('reachUp', { loop: true });
+    after(0.5, () => {
+      state.setCurtains(!state.get().curtainsClosed);
+      refreshActions();
+      sfx('whoosh');
+    });
+    after(1.9, () => {
+      busy = null;
+      cat.play('happy');
+      cat.emit('sparkle');
+    });
+  }));
+}
+
+function startBrushing() {
+  if (!free()) return;
+  if (!state.canBrush()) {
+    say('cat', t('brushedAlready'));
+    cat.play('shy');
+    return;
+  }
+  busy = 'brush';
+  walkTo(BRUSH_STAND, guard(() => {
+    cat.facing = 1;
+    cat.play('reachUp', { loop: true });
+    after(0.6, () => {
+      brushInCup = false;
+      startFly('brush', cupAt(), mouthAt(), 0.6, [1, 1], () => {
+        brushHand = true;
+        cat.play('brushteeth', { loop: true });
+        after(4.8, () => {
+          cat.play('spit', { onDone: guard(rinseMouth) });
+          after(0.45, () => {
+            mouthFoam = 0;
+            sfx('splash');
+            burst('drops', mouthAt().x + 6, mouthAt().y + 8, 10);
+          });
+        });
+      });
+    });
+  }));
+}
+
+function rinseMouth() {
+  brushHand = false;
+  startFly('brush', mouthAt(), cupAt(), 0.6, [1, 1], () => {
+    brushInCup = true;
+    state.brushTeeth();
+    grinAt = time;
+    sfx('coin');
+    cat.play('smile', {
+      onDone: guard(() => {
+        grinAt = -1;
+        busy = null;
+        cat.play('happy');
+      }),
+    });
+  });
+}
+
 function startGaming() {
   if (!free()) return;
   busy = 'game';
@@ -688,6 +841,180 @@ function startGaming() {
       cat.play('happy');
       cat.emit('sparkle');
     });
+  }));
+}
+
+function closeShelves() {
+  if (fridgeOpen) toggleFridge();
+  if (wardrobeOpen) toggleWardrobe();
+}
+
+function startAct(id, extra) {
+  closeShelves();
+  busy = id;
+  act = { id, ...extra };
+  refreshActions();
+}
+
+function endAct() {
+  act = null;
+  busy = null;
+  refreshActions();
+}
+
+function mark(key) {
+  act[key] = time;
+}
+
+function actAfter(s, fn) {
+  const mine = act;
+  after(s, () => {
+    if (act === mine) fn();
+  });
+}
+
+function canEat() {
+  if (!free()) return false;
+  if (state.get().needs.food >= 98) {
+    hint('full');
+    turnAway(1.6);
+    return false;
+  }
+  return true;
+}
+
+function pourTea() {
+  if (!canEat()) return;
+  startAct('tea');
+  walkTo(SPOT.tea, guard(() => {
+    cat.facing = 1;
+    cat.play('watch', { loop: true });
+    mark('boil');
+    actAfter(1, () => {
+      mark('cup');
+      sfx('pop');
+    });
+    actAfter(1.5, () => {
+      mark('pour');
+      sfx('splash');
+    });
+    actAfter(3.2, () => {
+      mark('pourEnd');
+      mark('lift');
+    });
+    actAfter(3.6, () => {
+      state.homeAct('tea');
+      cat.play('sip', { loop: true });
+    });
+    actAfter(7, () => {
+      mark('drop');
+      cat.play('happy');
+      cat.emit('heart');
+    });
+    actAfter(7.45, () => mark('gone'));
+    actAfter(7.8, endAct);
+  }));
+}
+
+function takeSnack() {
+  if (!canEat()) return;
+  const snack = SNACKS[Math.floor(Math.random() * SNACKS.length)];
+  startAct('snack', { item: snack.id });
+  walkTo(SPOT.snack, guard(() => {
+    cat.facing = 1;
+    cat.play('reach', { loop: true });
+    mark('open');
+    sfx('pop');
+    actAfter(0.9, () => {
+      mark('fly');
+      mark('plate');
+      sfx('tap');
+    });
+    actAfter(1.3, () => mark('shut'));
+    actAfter(1.8, () => walkTo(SPOT.eat, guard(() => {
+      cat.facing = 1;
+      mark('eat');
+      state.homeAct('snack');
+      sfx('eat');
+      cat.play(snack.anim, {
+        onDone: guard(() => {
+          mark('clear');
+          cat.play('happy');
+          cat.emit('heart');
+          actAfter(0.3, endAct);
+        }),
+      });
+    })));
+  }));
+}
+
+function stopTv() {
+  if (act.on === undefined) {
+    stopWalk();
+    endAct();
+    return;
+  }
+  if (act.off !== undefined) return;
+  mark('off');
+  if (time - act.on >= TV_REWARD_SEC) state.homeAct('tv');
+  cat.play('happy');
+  actAfter(0.4, endAct);
+}
+
+function toggleTv() {
+  if (busy === 'tv') {
+    stopTv();
+    return;
+  }
+  if (!free()) return;
+  startAct('tv');
+  walkTo(SPOT.tv, guard(() => {
+    cat.facing = 1;
+    cat.play('watch', { loop: true });
+    mark('on');
+    sfx('tap');
+    for (const s of [2.6, 6]) {
+      actAfter(s, () => cat.play('laugh', { onDone: guard(() => cat.play('watch', { loop: true })) }));
+    }
+    actAfter(TV_SEC, stopTv);
+  }));
+}
+
+function waterPlant() {
+  if (!free()) return;
+  if (!state.canWater()) {
+    hint('watered');
+    return;
+  }
+  startAct('water');
+  walkTo(SPOT.water, guard(() => {
+    cat.facing = -1;
+    cat.play('pour', { loop: true });
+    mark('can');
+    sfx('pop');
+    actAfter(0.6, () => mark('tilt'));
+    actAfter(1, () => {
+      mark('pour');
+      sfx('splash');
+    });
+    actAfter(1.9, () => mark('perk'));
+    actAfter(2.6, () => {
+      mark('bloom');
+      state.water();
+      const p = plantAt(L, floorLimit);
+      burst('hearts', p.x, p.y - 34, 6);
+      sfx('coin');
+    });
+    actAfter(3.3, () => {
+      mark('pourEnd');
+      mark('untilt');
+    });
+    actAfter(3.7, () => {
+      mark('away');
+      cat.play('happy');
+      cat.emit('heart');
+    });
+    actAfter(4.1, endAct);
   }));
 }
 
@@ -971,7 +1298,7 @@ const handlers = {
   },
   action(id) {
     lastInput = time;
-    ({ console: startGaming, dance: startDance, wardrobe: toggleWardrobe, fridge: toggleFridge, sponge: toggleSponge, rinse, toilet: tryPotty, light: toggleLight, gift: openGift })[id]();
+    ({ console: startGaming, dance: startDance, wardrobe: toggleWardrobe, fridge: toggleFridge, sponge: toggleSponge, rinse, toilet: tryPotty, light: toggleLight, gift: openGift, tea: pourTea, snack: takeSnack, tv: toggleTv, water: waterPlant, book: startReading, curtains: toggleCurtains, brush: startBrushing })[id]();
   },
   foodTap(item, rect) {
     lastInput = time;
@@ -1190,6 +1517,22 @@ function update(dt) {
     if (foam.length && Math.random() < dt * 14) foam.pop();
   }
   if (giftOpen) giftOpen += dt;
+  const drawerTo = Number(drawerOpen);
+  drawerK += Math.sign(drawerTo - drawerK) * Math.min(Math.abs(drawerTo - drawerK), dt * 2.5);
+  const curtainTo = Number(s.curtainsClosed);
+  curtainK = reduced.matches ? curtainTo : curtainK + Math.sign(curtainTo - curtainK) * Math.min(Math.abs(curtainTo - curtainK), dt / 1.1);
+  if (fly && (fly.t += dt) >= fly.dur) {
+    const cb = fly.cb;
+    fly = null;
+    cb();
+  }
+  if (brushHand && cat.anim === 'brushteeth') {
+    mouthFoam = Math.min(1, mouthFoam + dt / 4);
+    if (time - scrubSfx > 0.3) {
+      scrubSfx = time;
+      sfx('scrub');
+    }
+  }
   if (giftVisible() !== giftShown) {
     giftShown = !giftShown;
     refreshActions();
@@ -1223,12 +1566,49 @@ function drawRoomAt(ctx, name, ox) {
     gift: name === 'living' && (giftVisible() || giftOpen > 0),
     giftOpen,
   });
+  if (name === 'bedroom') drawBedroomAct(ctx, cur);
+  if (name === 'bath' && (!cur || brushInCup)) drawShelfBrush(ctx, L);
   if (name === 'kitchen' && !(cur && bowlHidden)) {
     const b = L.kitchen.bowl;
     drawBowl(ctx, b.x, b.y, cur && bowlFood ? iconImage(bowlFood) : null, cur && bowlHot);
   }
+  if (cur && act) drawActBack(ctx, L, act, time);
+  if (name === 'living') drawPlant(ctx, plantAt(L, floorLimit), time, cur && act && act.id === 'water' ? plantAnim(act, time) : plantLook(!state.canWater()));
   if (name === 'living' && fr && friendOn()) friend.draw(ctx, fr.x, fr.y, { scale: FRIEND_SCALE });
   ctx.restore();
+}
+
+function drawBedroomAct(ctx, cur) {
+  const dark = cur && lightsOff;
+  const k = cur ? curtainK : Number(state.get().curtainsClosed);
+  const day = !state.isNight() && !dark;
+  if (day && k < 1) drawWindowDay(ctx, L, time);
+  if (k > 0) drawCurtains(ctx, L, k, false);
+  if (!dark && k < 1) drawWindowLight(ctx, L, time, day, 1 - k);
+  if (cur) drawDrawer(ctx, L, drawerK, bookInDrawer);
+}
+
+function drawBedBathFront(ctx) {
+  if (fly) {
+    const u = Math.min(1, fly.t / fly.dur);
+    const e = u * u * (3 - 2 * u);
+    const x = lerp(fly.from.x, fly.to.x, e);
+    const y = lerp(fly.from.y, fly.to.y, e) - Math.sin(Math.PI * u) * 14;
+    if (fly.kind === 'book') drawBookIn(ctx, x, y, (1 - e) * 0.3 * cat.facing, lerp(fly.grow[0], fly.grow[1], e));
+    else drawBrush(ctx, x, y, lerp(Math.PI / 2, 0.25, e), false, cat.facing);
+  }
+  if (brushHand) {
+    const m = mouthAt();
+    drawBrush(ctx, m.x + cat.facing + Math.sin(time * 22) * 2.2 * cat.facing, m.y + 1, 0.25, true, cat.facing);
+  }
+  if (mouthFoam > 0) {
+    const m = mouthAt();
+    drawMouthFoam(ctx, m.x, m.y, mouthFoam, time);
+  }
+  if (grinAt >= 0) {
+    const m = mouthAt();
+    drawGrin(ctx, m.x, m.y, time - grinAt);
+  }
 }
 
 function drawParticle(ctx, pt) {
@@ -1263,13 +1643,18 @@ function draw(ctx) {
     drawRoomAt(ctx, room, slide.dir * (1 - k) * W);
   } else drawRoomAt(ctx, room, 0);
   if (!catHidden) cat.draw(ctx, catX, catY);
+  if (act && !slide) drawActFront(ctx, L, act, time, { x: catX, y: catY, dir: cat.facing }, plantAt(L, floorLimit));
   if (!slide && room === 'bedroom' && state.get().sleeping) drawBedFront(ctx, L);
   for (const f of foam) drawFoam(ctx, catX + f.dx, catY + f.dy, f.s);
   if (screen) drawScreen(ctx, L);
   if (shower) drawShower(ctx, catX, catY - cat.height - 14, catY, time);
   for (const pt of parts) drawParticle(ctx, pt);
   if (tool === 'sponge' && ptr) drawSponge(ctx, ptr.x, ptr.y);
-  if (room === 'bedroom' && lightsOff) drawDark(ctx, L, H, time);
+  drawBedBathFront(ctx);
+  if (room === 'bedroom' && lightsOff) {
+    drawDark(ctx, L, H, time, state.get().curtainsClosed);
+    if (curtainK > 0) drawCurtains(ctx, L, curtainK, true);
+  }
 }
 
 export function registerRooms() {

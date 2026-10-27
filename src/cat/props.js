@@ -449,37 +449,49 @@ function book(ctx, g, pv) {
   ctx.restore();
 }
 
-function laptop(ctx, g) {
+function laptopStar(ctx, x, y, r) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.quadraticCurveTo(x, y, x, y + r);
+  ctx.quadraticCurveTo(x, y, x - r, y);
+  ctx.quadraticCurveTo(x, y, x, y - r);
+  ctx.closePath();
+  ink(ctx, '#ffd66b', 0.7);
+}
+
+function laptop(ctx, g, pv) {
   const x = g.face.x + 6;
   const y = g.bot;
+  const tremble = [0, 0.012, -0.01, 0.008][pv % 4];
+  ctx.save();
+  ctx.translate(x + 1, y - 3);
+  ctx.rotate(tremble);
+  ctx.translate(-x - 1, 3 - y);
+  rr(ctx, x - 14, y - 26, 30, 23, 3.4);
+  ink(ctx, '#cdbaf2');
+  rr(ctx, x - 11.6, y - 23.6, 25.2, 18.2, 2);
+  ink(ctx, null, 0.6);
+  seg(ctx, x - 10.5, y - 21, x - 4, y - 21, '#f1eafd', 1);
   ctx.beginPath();
-  ctx.moveTo(x - 6, y - 1);
-  ctx.lineTo(x - 13, y - 26);
-  ctx.lineTo(x + 15, y - 26);
-  ctx.lineTo(x + 18, y - 1);
-  ctx.closePath();
-  ink(ctx, '#c9b3f0');
-  ctx.beginPath();
-  ctx.moveTo(x - 9, y - 4);
-  ctx.lineTo(x - 13.5, y - 22.5);
-  ctx.lineTo(x + 12.5, y - 22.5);
-  ctx.lineTo(x + 15, y - 4);
-  ctx.closePath();
-  ink(ctx, '#fdfcff', 1);
-  rr(ctx, x - 16, y - 3, 36, 3.4, 1.2);
+  ctx.moveTo(x + 1, y - 9.6);
+  ctx.bezierCurveTo(x - 6.5, y - 14.2, x - 4.2, y - 21.2, x + 1, y - 17.6);
+  ctx.bezierCurveTo(x + 6.2, y - 21.2, x + 8.5, y - 14.2, x + 1, y - 9.6);
+  ink(ctx, '#f6a5b6', 0.9);
+  seg(ctx, x - 2.4, y - 16.6, x - 1.4, y - 17.8, '#ffffff', 0.9);
+  ctx.restore();
+  rr(ctx, x - 16, y - 3, 34, 3.4, 1.2);
   ink(ctx, '#b19ae6');
-  for (const dy of [-2.2, -0.9]) for (let k = 0; k < 9; k++) {
-    rr(ctx, x - 13.6 + k * 3.7 + (dy === -0.9 ? 1 : 0), y + dy, 2.4, 0.8, 0.3);
-    ctx.fillStyle = '#d9cdf3';
-    ctx.fill();
+  seg(ctx, x - 12, y - 1.5, x - 3, y - 1.5, '#d9cdf3', 0.8);
+  if (pv % 4 === 1) laptopStar(ctx, x + 12, y - 30, 2);
+  if (pv % 4 === 2) {
+    laptopStar(ctx, x - 4, y - 31, 1.6);
+    dot(ctx, x + 6, y - 29, 0.8, LINE);
   }
-  [-17, -14.2, -11.4].forEach((dy, i) => seg(ctx, x - 10 + i * 0.4, y + dy - 1, x - 5.4 + i * 0.4, y + dy - 1, '#d9cdf3', 0.9));
-  seg(ctx, x + 7, y - 17, x + 11, y - 17, '#d9cdf3', 0.9);
-  seg(ctx, x + 7, y - 14.4, x + 10.4, y - 14.4, '#d9cdf3', 0.9);
-  dot(ctx, x + 1.5, y - 13.5, 3, '#f08aa3');
-  dot(ctx, x + 0.6, y - 14.6, 0.8, '#fff0f3');
-  dot(ctx, x + 0.5, y - 24.3, 0.5, LINE);
-  seg(ctx, x - 5, y - 21, x - 3, y - 21, '#eee6fb', 0.8);
+  if (pv % 4 === 3) {
+    seg(ctx, x + 9, y - 31, x + 13, y - 31, LINE, 1);
+    seg(ctx, x + 11, y - 33, x + 11, y - 29, LINE, 1);
+  }
 }
 
 function blanket(ctx, g) {
@@ -897,7 +909,7 @@ export function propFront(ctx, g, P, outfit) {
     if (!(outfit && outfit.eyes)) glasses(ctx, g, 'round_glasses');
     big(ctx, g.face.x + 4, g.bot, 1.35, () => book(ctx, g, pv));
   }
-  if (p === 'laptop') big(ctx, g.face.x + 6, g.bot, 1.35, () => laptop(ctx, g));
+  if (p === 'laptop') big(ctx, g.face.x + 6, g.bot, 1.35, () => laptop(ctx, g, pv));
   if (p === 'blanket') blanket(ctx, g);
   if (p === 'paint') paintSet(ctx, g);
   if (p === 'lights') {

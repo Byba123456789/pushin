@@ -34,7 +34,14 @@ export const OUTFITS = [
   { id: 'wizard_hat', slot: 'head', name: 'Шляпа волшебника', price: 350, level: 6 },
 ];
 
-export const XP = { feed: 5, wash: 5, potty: 3, sleep: 5, play: 10, pet: 1 };
+export const XP = { feed: 5, wash: 5, potty: 3, sleep: 5, play: 10, pet: 1, read: 3, brush: 3 };
+export const HOME_ACTS = {
+  tea: { food: 8, fun: 4, xp: 2 },
+  snack: { food: 18, fun: 3, xp: 3 },
+  tv: { fun: 12, xp: 5 },
+  water: { fun: 6, xp: 3 },
+};
+export const WATER_GAP_HOURS = 4;
 const FIRST_LEVEL_XP = 100;
 const LEVEL_GROWTH = 1.4;
 export const xpToNext = (level) => Math.round(FIRST_LEVEL_XP * LEVEL_GROWTH ** (level - 1));
