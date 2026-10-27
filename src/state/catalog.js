@@ -32,6 +32,18 @@ export const OUTFITS = [
   { id: 'star_glasses', slot: 'eyes', name: 'Очки-звёздочки', price: 160, level: 5 },
   { id: 'cape', slot: 'body', name: 'Накидка', price: 260, level: 6 },
   { id: 'wizard_hat', slot: 'head', name: 'Шляпа волшебника', price: 350, level: 6 },
+  { id: 'cap', slot: 'head', name: 'Кепка', price: 70, level: 1 },
+  { id: 'strawberry_hat', slot: 'head', name: 'Шапка-клубничка', price: 110, level: 2 },
+  { id: 'cowboy_hat', slot: 'head', name: 'Ковбойская шляпа', price: 180, level: 4 },
+  { id: 'tiara', slot: 'head', name: 'Тиара', price: 240, level: 5 },
+  { id: 'sleep_mask', slot: 'eyes', name: 'Маска для сна', price: 60, level: 1 },
+  { id: 'aviators', slot: 'eyes', name: 'Авиаторы', price: 100, level: 2 },
+  { id: 'cat_glasses', slot: 'eyes', name: 'Очки «кошачий глаз»', price: 170, level: 4 },
+  { id: 'bandana', slot: 'body', name: 'Бандана', price: 55, level: 1 },
+  { id: 'necktie', slot: 'body', name: 'Галстук', price: 75, level: 2 },
+  { id: 'hoodie', slot: 'body', name: 'Худи', price: 160, level: 3 },
+  { id: 'star_pajamas', slot: 'body', name: 'Пижама со звёздами', price: 230, level: 5 },
+  { id: 'bee_suit', slot: 'body', name: 'Костюм пчёлки', price: 400, level: 7 },
 ];
 
 export const XP = { feed: 2, wash: 2, potty: 1, sleep: 5, play: 3, pet: 1, read: 10, brush: 10, curtains: 2 };

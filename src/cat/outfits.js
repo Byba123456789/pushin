@@ -21,7 +21,7 @@ function neckPath(g, ctx, dy = 0) {
   ctx.quadraticCurveTo(b[0], b[1] + dy, c[0], c[1] + dy);
 }
 
-function sweater(ctx, g, P) {
+function shirtPath(ctx, g, P) {
   const far = 200;
   const side = g.body === 'back';
   const collar = lying(g, P) && !side;
@@ -48,6 +48,11 @@ function sweater(ctx, g, P) {
     if (collar) ctx.lineTo(a[0], a[1] - far);
   }
   ctx.closePath();
+  return { far, side, a, c, hem, edge };
+}
+
+function sweater(ctx, g, P) {
+  const { far, side, a, c, hem, edge } = shirtPath(ctx, g, P);
   ctx.fillStyle = '#f6b5c9';
   ctx.fill();
   ctx.save();
@@ -304,6 +309,12 @@ function lenses(ctx, es, kind) {
     ctx.stroke();
   } else if (kind === 'monocle') {
     monocle(ctx, es);
+  } else if (kind === 'aviators') {
+    aviators(ctx, es);
+  } else if (kind === 'cat_glasses') {
+    catGlasses(ctx, es);
+  } else if (kind === 'sleep_mask') {
+    sleepMask(ctx, es);
   } else if (kind === 'heart_glasses') {
     for (const s of [-1, 1]) {
       const x = fx + s * es;
@@ -840,11 +851,372 @@ function capelet(ctx, g, pal) {
   ink(ctx, '#ffd86b', 1.1);
 }
 
+function cap(ctx, g) {
+  const w = capWidth(g);
+  headAt(ctx, g, () => {
+    ctx.beginPath();
+    ctx.moveTo(-w, 1);
+    ctx.bezierCurveTo(-w - 1, -15, w + 1, -15, w, 1);
+    ctx.closePath();
+    ink(ctx, '#a6cdf2', 1.5);
+    ctx.strokeStyle = '#7fb0e0';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(0, -11.2);
+    ctx.quadraticCurveTo(-w * 0.3, -5, -w * 0.28, 1);
+    ctx.moveTo(0, -11.2);
+    ctx.quadraticCurveTo(w * 0.3, -5, w * 0.28, 1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(w * 0.2, 0.4);
+    ctx.quadraticCurveTo(w + 3, -2, w + 9, 3.2);
+    ctx.quadraticCurveTo(w + 6, 6.2, w * 0.4, 3.6);
+    ctx.closePath();
+    ink(ctx, '#7fb0e0', 1.4);
+    ctx.beginPath();
+    ctx.arc(0, -11.4, 1.8, 0, Math.PI * 2);
+    ink(ctx, '#7fb0e0', 1);
+  });
+}
+
+function strawberryHat(ctx, g) {
+  const w = capWidth(g);
+  headAt(ctx, g, () => {
+    ctx.beginPath();
+    ctx.moveTo(-w, 1.6);
+    ctx.bezierCurveTo(-w - 2, -16, w + 2, -16, w, 1.6);
+    ctx.quadraticCurveTo(0, 4.6, -w, 1.6);
+    ctx.closePath();
+    ink(ctx, '#f08aa3', 1.5);
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = '#fff0a0';
+    for (const [x, y] of [[-0.55, -6.5], [-0.2, -10], [0.2, -4.5], [0.5, -9], [-0.7, -1.4], [0, -1.2], [0.72, -2.2], [0.05, -7.4]]) {
+      ctx.beginPath();
+      ctx.ellipse(x * w, y, 0.7, 1, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    for (const k of [-1, 0, 1]) {
+      ctx.save();
+      ctx.translate(k * 3, -11.4);
+      ctx.rotate(k * 0.9);
+      ctx.beginPath();
+      ctx.moveTo(0, 1);
+      ctx.quadraticCurveTo(-3, -3.4, 0, -6.6);
+      ctx.quadraticCurveTo(3, -3.4, 0, 1);
+      ink(ctx, '#9bd6ae', 1);
+      ctx.restore();
+    }
+  });
+}
+
+function tiara(ctx, g) {
+  const w = Math.min(capWidth(g) * 0.9, 20);
+  headAt(ctx, g, () => {
+    const at = (t) => [-w + 2 * w * t, 3.4 - Math.sin(t * Math.PI) * 3.4];
+    ctx.beginPath();
+    for (let k = 0; k <= 12; k++) ctx.lineTo(...at(k / 12));
+    ctx.strokeStyle = LINE;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 3.8;
+    ctx.stroke();
+    ctx.strokeStyle = '#e9e4f5';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+    for (const [t, h] of [[0.2, 5.4], [0.5, 10], [0.8, 5.4]]) {
+      const [x, y] = at(t);
+      ctx.beginPath();
+      ctx.moveTo(x - 2.4, y + 0.6);
+      ctx.lineTo(x, y - h);
+      ctx.lineTo(x + 2.4, y + 0.6);
+      ctx.closePath();
+      ink(ctx, '#e9e4f5', 1.1);
+    }
+    const [x, y] = at(0.5);
+    ctx.beginPath();
+    ctx.moveTo(x, y - 11);
+    ctx.lineTo(x + 3.2, y - 7);
+    ctx.lineTo(x, y - 3);
+    ctx.lineTo(x - 3.2, y - 7);
+    ctx.closePath();
+    ink(ctx, '#8fd0f5', 1);
+    for (const t of [0.2, 0.8]) {
+      const [px, py] = at(t);
+      ctx.beginPath();
+      ctx.arc(px, py - 6, 1.4, 0, Math.PI * 2);
+      ink(ctx, '#f6a5b6', 0.8);
+    }
+  });
+}
+
+function cowboyHat(ctx, g) {
+  const w = capWidth(g);
+  headAt(ctx, g, () => {
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.62, 1.4);
+    ctx.bezierCurveTo(-w * 0.7, -9, -w * 0.4, -12, -2.6, -10);
+    ctx.quadraticCurveTo(0, -7.6, 2.6, -10);
+    ctx.bezierCurveTo(w * 0.4, -12, w * 0.7, -9, w * 0.62, 1.4);
+    ctx.closePath();
+    ink(ctx, '#e3b27c', 1.5);
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.66, -1.6);
+    ctx.quadraticCurveTo(0, 2.4, w * 0.66, -1.6);
+    ctx.lineTo(w * 0.64, 1.8);
+    ctx.quadraticCurveTo(0, 5.2, -w * 0.64, 1.8);
+    ctx.closePath();
+    ink(ctx, '#c8553d', 1.1);
+    ctx.beginPath();
+    ctx.moveTo(-w - 8, -4);
+    ctx.quadraticCurveTo(-w - 4, 3.6, -w * 0.5, 3.2);
+    ctx.quadraticCurveTo(0, 4.8, w * 0.5, 3.2);
+    ctx.quadraticCurveTo(w + 4, 3.6, w + 8, -4);
+    ctx.quadraticCurveTo(w + 6, 5.6, 0, 6.2);
+    ctx.quadraticCurveTo(-w - 6, 5.6, -w - 8, -4);
+    ctx.closePath();
+    ink(ctx, '#d19a62', 1.5);
+  });
+}
+
+function aviators(ctx, es) {
+  for (const s of [-1, 1]) {
+    const x = s * es;
+    ctx.beginPath();
+    ctx.moveTo(x - 5.8, -3);
+    ctx.lineTo(x + 5.8, -3);
+    ctx.bezierCurveTo(x + 6.4, 2.2, x + 3, 5.6, x, 5.4);
+    ctx.bezierCurveTo(x - 3, 5.6, x - 6.4, 2.2, x - 5.8, -3);
+    ctx.closePath();
+    ink(ctx, 'rgba(111,166,214,0.62)', 1.3);
+    ctx.strokeStyle = '#fff6e6';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(x - 3.4, -0.8);
+    ctx.lineTo(x - 1.4, -1.8);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-es + 5.4, -2.4);
+  ctx.quadraticCurveTo(0, -5, es - 5.4, -2.4);
+  ctx.moveTo(-es + 5.6, -0.4);
+  ctx.quadraticCurveTo(0, -2.4, es - 5.6, -0.4);
+  ctx.stroke();
+}
+
+function catGlasses(ctx, es) {
+  for (const s of [-1, 1]) {
+    const x = s * es;
+    ctx.beginPath();
+    ctx.moveTo(x - s * 4.6, -2);
+    ctx.quadraticCurveTo(x, -4.6, x + s * 6.8, -5.4);
+    ctx.quadraticCurveTo(x + s * 6.8, 1.6, x + s * 3.4, 3.6);
+    ctx.quadraticCurveTo(x - s * 1.6, 5, x - s * 4.6, 2.2);
+    ctx.quadraticCurveTo(x - s * 6, 0, x - s * 4.6, -2);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.fill();
+    ctx.strokeStyle = LINE;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.strokeStyle = '#f08aa3';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  }
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-es + 4.4, -1.6);
+  ctx.quadraticCurveTo(0, -3.6, es - 4.4, -1.6);
+  ctx.stroke();
+}
+
+function sleepMask(ctx, es) {
+  ctx.beginPath();
+  ctx.moveTo(-es - 9, -2.6);
+  ctx.lineTo(es + 9, -2.6);
+  ctx.lineTo(es + 9, 1.8);
+  ctx.lineTo(-es - 9, 1.8);
+  ctx.closePath();
+  ink(ctx, '#e3d6fa', 1.2);
+  ctx.beginPath();
+  ctx.moveTo(-es - 6, -5.4);
+  ctx.quadraticCurveTo(0, -8, es + 6, -5.4);
+  ctx.quadraticCurveTo(es + 9, 5, es + 1, 6.6);
+  ctx.quadraticCurveTo(0, 4.4, -es - 1, 6.6);
+  ctx.quadraticCurveTo(-es - 9, 5, -es - 6, -5.4);
+  ctx.closePath();
+  ink(ctx, '#c9b3f0', 1.4);
+  for (const s of [-1, 1]) {
+    const x = s * es;
+    ctx.beginPath();
+    ctx.ellipse(x, 0, 3.4, 2.8, 0, 0, Math.PI * 2);
+    ink(ctx, '#fff6e6', 1);
+    ctx.beginPath();
+    ctx.arc(x + s * 0.6, 0.4, 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = LINE;
+    ctx.fill();
+  }
+}
+
+function necktie(ctx, g) {
+  const dy = g.face.ang ? 11 : g.bowY - g.face.y;
+  inFace(ctx, g, () => {
+    ctx.beginPath();
+    ctx.moveTo(-2.6, dy + 1.6);
+    ctx.lineTo(-3.8, dy + 12.6);
+    ctx.lineTo(0, dy + 16);
+    ctx.lineTo(3.8, dy + 12.6);
+    ctx.lineTo(2.6, dy + 1.6);
+    ctx.closePath();
+    ink(ctx, '#7fb0e0', 1.3);
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle = '#fff6e6';
+    ctx.lineWidth = 1.5;
+    for (let k = 0; k < 4; k++) {
+      ctx.beginPath();
+      ctx.moveTo(-5, dy + 3 + k * 3.4);
+      ctx.lineTo(5, dy + 6 + k * 3.4);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.beginPath();
+    ctx.moveTo(-3.4, dy - 1.6);
+    ctx.lineTo(3.4, dy - 1.6);
+    ctx.lineTo(2.6, dy + 2.4);
+    ctx.lineTo(-2.6, dy + 2.4);
+    ctx.closePath();
+    ink(ctx, '#6a9fd4', 1.3);
+  });
+}
+
+function bandana(ctx, g) {
+  const all = scarfCurve(g).pts;
+  const flat = g.body === 'loaf' || g.body === 'flat' || g.body === 'back';
+  const pts = flat ? all.slice(Math.round(all.length * 0.45), Math.round(all.length * 0.95)) : all;
+  const tip = offset(pts, flat ? 9 : 15)[pts.length >> 1];
+  const top = offset(pts, -1);
+  const last = top[top.length - 1];
+  ctx.save();
+  ctx.clip(smooth(g.pts));
+  ctx.beginPath();
+  trace(ctx, top);
+  ctx.lineTo(tip[0], tip[1]);
+  ctx.closePath();
+  ctx.fillStyle = '#f08a7a';
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  ctx.fillStyle = '#fff6e6';
+  for (const [u, v] of [[0.3, 0.3], [0.5, 0.18], [0.7, 0.3], [0.4, 0.5], [0.6, 0.5], [0.5, 0.72]]) {
+    const p = top[Math.round(u * (top.length - 1))];
+    ctx.beginPath();
+    ctx.arc(p[0] + (tip[0] - p[0]) * v, p[1] + (tip[1] - p[1]) * v, 1.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1.3;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(top[0][0], top[0][1]);
+  ctx.lineTo(tip[0], tip[1]);
+  ctx.lineTo(last[0], last[1]);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function garment(ctx, g, P, fill, trim, decor) {
+  const { side, a, hem, edge } = shirtPath(ctx, g, P);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  decor(ctx, g, hem);
+  ctx.restore();
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1.3;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  edge();
+  if (!side) {
+    ctx.moveTo(a[0] - 200, hem);
+    ctx.lineTo(a[0] + 400, hem);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = trim;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  edge(1.8);
+  ctx.stroke();
+}
+
+function hoodie(ctx, g, P) {
+  garment(ctx, g, P, '#a6cdf2', '#8fb9e6', (c, gg, hem) => {
+    const b = gg.belly;
+    const top = Math.min(b.y + b.ry * 0.1, hem - 12);
+    c.beginPath();
+    c.moveTo(b.x - b.rx * 0.62, top);
+    c.lineTo(b.x + b.rx * 0.62, top);
+    c.lineTo(b.x + b.rx * 0.78, hem + 2);
+    c.lineTo(b.x - b.rx * 0.78, hem + 2);
+    c.closePath();
+    ink(c, '#8fb9e6', 1.1);
+    c.strokeStyle = LINE;
+    c.lineWidth = 0.9;
+    c.beginPath();
+    for (const dx of [-3, 3]) {
+      c.moveTo(gg.face.x + dx, gg.neck[1][1] + 2);
+      c.lineTo(gg.face.x + dx * 1.3, gg.neck[1][1] + 11);
+    }
+    c.stroke();
+  });
+}
+
+function starPajamas(ctx, g, P) {
+  garment(ctx, g, P, '#c9b3f0', '#fbd3e0', (c, gg) => {
+    let row = 0;
+    for (let y = gg.bot - 68; y < gg.bot; y += 11) {
+      for (let x = gg.cx - 70 + (row++ % 2) * 7; x < gg.cx + 70; x += 14) star(c, x, y, 3, 0);
+    }
+  });
+}
+
+function beeSuit(ctx, g, P) {
+  garment(ctx, g, P, '#ffe08a', '#6b4a32', (c, gg) => {
+    c.fillStyle = '#6b4a32';
+    for (let y = gg.bot - 63; y < gg.bot; y += 11) c.fillRect(gg.cx - 90, y, 180, 4.6);
+  });
+}
+
+function beeWings(ctx, g) {
+  const [x, y] = g.neck[0];
+  ctx.save();
+  ctx.translate(x + 2, y + 10);
+  for (const [ang, rx, ry] of [[-0.5, 4.4, 9.5], [-1.15, 3.6, 7.6]]) {
+    ctx.save();
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.ellipse(0, -ry, rx, ry, 0, 0, Math.PI * 2);
+    ink(ctx, 'rgba(225,242,255,0.92)', 1.2);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+const HIDES_BROWS = ['heart_glasses', 'star_glasses', 'sleep_mask'];
+
 export function outfitUnder(ctx, g, P, pal, o) {
   if (!o) return;
   if (o.body === 'sweater') sweater(ctx, g, P);
   if (o.body === 'apron') apron(ctx, g);
-  if (o.eyes === 'heart_glasses' || o.eyes === 'star_glasses') g.hideBrows = true;
+  if (o.body === 'hoodie') hoodie(ctx, g, P);
+  if (o.body === 'star_pajamas') starPajamas(ctx, g, P);
+  if (o.body === 'bee_suit') beeSuit(ctx, g, P);
+  if (HIDES_BROWS.includes(o.eyes)) g.hideBrows = true;
 }
 
 export function outfitOver(ctx, g, P, pal, o) {
@@ -854,6 +1226,9 @@ export function outfitOver(ctx, g, P, pal, o) {
     scarfEnd(ctx, g);
   }
   if (o.body === 'bowtie') bowtie(ctx, g);
+  if (o.body === 'necktie') necktie(ctx, g);
+  if (o.body === 'bandana') bandana(ctx, g);
+  if (o.body === 'bee_suit') beeWings(ctx, g);
   if (o.body === 'tutu') tutu(ctx, g);
   if (o.body === 'cape') capelet(ctx, g, pal);
   if (o.body === 'unicorn') {
@@ -875,4 +1250,8 @@ export function outfitOver(ctx, g, P, pal, o) {
   if (hat && o.head === 'bunny_ears') bunnyEars(ctx, g);
   if (hat && o.head === 'flower_wreath') wreath(ctx, g);
   if (hat && o.head === 'wizard_hat') wizardHat(ctx, g);
+  if (hat && o.head === 'cap') cap(ctx, g);
+  if (hat && o.head === 'strawberry_hat') strawberryHat(ctx, g);
+  if (hat && o.head === 'tiara') tiara(ctx, g);
+  if (hat && o.head === 'cowboy_hat') cowboyHat(ctx, g);
 }

@@ -276,7 +276,7 @@ function drawLiving(H, L) {
   lvFloor(H, F);
   baseboard(F);
   ln(0.7, 'rgba(75,46,30,0.25)', 0, F - 3.5, W, F - 3.5);
-  lvRug(90, F + 48, 86, 17, 0.4, '#fff3e6', '#e7c9b4', '#f2bfcb', '#f4c4cf');
+  lvRug(90, F + 20, 86, 17, 0.4, '#fff3e6', '#e7c9b4', '#f2bfcb', '#f4c4cf');
   lvFrame(6, F - 178, 32, 26, '#d9f0fc');
   pth(22, F - 164, 'M-6 4a6 6 0 0 1 12 0z', MINT, 1);
   ln(0.7, '#8fcfba', 12, F - 160, 32, F - 160);
@@ -447,7 +447,7 @@ function drawKitchen(H, L) {
   checker(H, F, '#fff2e1', '#fbdcc2');
   baseboard(F);
   ln(0.7, 'rgba(75,46,30,0.25)', 0, F - 3.5, W, F - 3.5);
-  lvRug(90, F + 48, 62, 12, 1.7, '#ffe0cc', '#efc5ad', '#f6a5b6', '#f6a5b6');
+  lvRug(90, F + 22, 62, 12, 1.7, '#ffe0cc', '#efc5ad', '#f6a5b6', '#f6a5b6');
   lvClock(90, F - 172, '#f9cad5', 2.68, -Math.PI / 2);
   const w = L.kitchen.win;
   el(w.x + w.w / 2, w.y + w.h + 5.5, w.w / 2 + 2, 1.8, SHADOW, 0);
@@ -875,7 +875,7 @@ function drawBath(H, L) {
   btWall(F);
   checker(H, F, '#eef8ff', '#d5eaf8');
   baseboard(F);
-  btMat(F);
+  btMat(F - 28);
   btPorthole(F);
   btPicture(F);
   btLamp(F);
@@ -1169,7 +1169,7 @@ function drawBedroom(H, L) {
   bdNightstand(F);
   bdSwitch(F);
   bdBed(F, L.bedroom.bed);
-  bdRug(F);
+  bdRug(F - 24);
 }
 
 const DRAW = { living: drawLiving, kitchen: drawKitchen, bath: drawBath, bedroom: drawBedroom };
@@ -1419,4 +1419,70 @@ export function drawBowl(ctx, x, y, img, hot) {
   line(0.5, 'rgba(75,46,30,0.3)');
   heart(10.5, -3.6, 0.4, '#ffffff');
   c.restore();
+}
+
+const TF_BODY = 'M0 0h78v14c0 14-10 22-22 22H22C10 36 0 28 0 14z';
+
+function tfWall(F) {
+  pth(-4, F - 34, TF_BODY, '#ffffff', 1.3);
+  c.save();
+  c.translate(-4, F - 34);
+  c.clip(new Path2D(TF_BODY));
+  c.fillStyle = '#cfeafb';
+  c.fillRect(0, 15, 78, 3.4);
+  c.fillStyle = 'rgba(143,200,230,0.22)';
+  c.fillRect(0, 27, 78, 10);
+  c.restore();
+  for (let x = 6; x < 70; x += 9) heart(x - 1, F - 17.2 + (x % 2), 0.38, '#f6a5b6');
+  btStroke(-4, F - 34, 'M6 22c-.4 4 1.6 8 5 10', '#ffffff', 1.3);
+  btStroke(-4, F - 34, 'M70 20c.4 3-1 6-3 8', '#ffffff', 1);
+  rr(-6, F - 40, 82, 8, 4, '#f7fbff', 1.3);
+  ln(1, '#ffffff', 0, F - 38.6, 68, F - 38.6);
+  ln(0.6, '#bcdcf0', 3, F - 33.8, 68, F - 33.8);
+  el(64, F - 25, 2.6, 2.6, '#e6f5fd', 0.9);
+  el(64, F - 25, 0.9, 0.9, '#8fcfba', 0);
+}
+
+function tfFoam(F) {
+  const foam = [[5, F - 40, 7, 5, 0.3], [16, F - 42, 8.5, 6.5, 1], [29, F - 40, 7.5, 5.5, 2], [40, F - 43, 7, 6.5, 0.6], [51, F - 40, 8, 5.5, 1.7], [62, F - 42, 7.5, 6, 2.4], [71, F - 39, 6, 4.5, 0.9], [23, F - 46, 5, 3.6, 1.2], [46, F - 47, 4.6, 3.4, 0.2]];
+  for (const [x, y, rx, ry, k] of foam) blob(x, y, rx, ry, k, '#ffffff', 2.4);
+  for (const [x, y, rx, ry, k] of foam) blob(x, y, rx, ry, k, '#ffffff', 0);
+  for (const [x, y, rx, ry] of foam) {
+    c.beginPath();
+    c.arc(x, y, Math.min(rx, ry) * 0.62, 0.1, 1.2);
+    line(0.7, '#bcdcf0');
+  }
+  for (const [x, y, s] of [[9, F - 47.5, 2.2], [33, F - 49, 1.6], [57, F - 48, 2], [67, F - 45, 1.4]]) {
+    el(x, y, s, s, '#e9f6fd', 0.7);
+    ln(0.6, '#ffffff', x - s * 0.5, y - s * 0.4, x - s * 0.1, y - s * 0.8);
+  }
+}
+
+export function drawTubFront(ctx, L) {
+  c = ctx;
+  tfWall(L.F);
+  tfFoam(L.F);
+}
+
+function sfLip(F) {
+  rr(40, F - 17, 100, 13, [4, 4, 8, 8], '#f9b8c9', 1.3);
+  ln(1.1, INK, 90, F - 17, 90, F - 5);
+  ln(1.3, 'rgba(255,255,255,0.4)', 48, F - 13.4, 84, F - 13.4);
+  ln(1.3, 'rgba(255,255,255,0.4)', 96, F - 13.4, 132, F - 13.4);
+  pth(54, F - 10, 'M0 0q8 3 16 0M46 1q8 2 14 0M70 0q8 3 16 0', null, 0.8);
+}
+
+function sfArms(F) {
+  for (const x of [29, 132]) {
+    rr(x, F - 42, 19, 44, 9, '#f7a9bd', 1.3);
+    lvStitch(x + 2.5, F - 39.5, 14, 38, 6.5, 'rgba(255,255,255,0.5)');
+    ln(1.3, 'rgba(255,255,255,0.4)', x + 5, F - 33, x + 5, F - 22);
+    ln(0.6, '#e58aa3', x + 3, F - 6, x + 16, F - 5);
+  }
+}
+
+export function drawSofaFront(ctx, L) {
+  c = ctx;
+  sfLip(L.F);
+  sfArms(L.F);
 }

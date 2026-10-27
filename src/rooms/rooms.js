@@ -4,7 +4,7 @@ import { createCat } from '../cat/cat.js';
 import { createFriend } from '../cat/friend.js';
 import { sfx, music, setMuted, isMuted } from '../audio/audio.js';
 import { GIFT, FRIENDS } from '../state/catalog.js';
-import { layout, background, drawLife, drawDark, drawScreen, drawShower, drawSponge, drawFoam, drawBowl, drawBedFront } from './backgrounds.js';
+import { layout, background, drawLife, drawDark, drawScreen, drawShower, drawSponge, drawFoam, drawBowl, drawBedFront, drawTubFront, drawSofaFront } from './backgrounds.js';
 import { drawCurtains, drawWindowDay, drawWindowLight, drawBookIn, drawDrawer, drawBrush, drawShelfBrush, drawMouthFoam, drawGrin, BOOK_HAND, MOUTH, READ_OFFSET, BRUSH_STAND } from './act-bed-bath.js';
 import { iconImage } from './icons.js';
 import { drawActBack, drawActFront, drawPlant, plantAt, plantLook, plantAnim } from './act-kitchen-living.js';
@@ -25,6 +25,14 @@ const FRIEND_SCALE = 0.85;
 const MISS_MS = 8 * 3600 * 1000;
 const SLIDE = 0.4;
 const BED_SINK = 6;
+const REST_X = 90;
+const RUG_DY = { living: 20, kitchen: 22, bath: 20, bedroom: 18 };
+const HOP = 0.45;
+const HOP_ARC = 8;
+const SOFA_GAP = 240;
+const SOFA_STAY = [15, 40];
+const STAGE = { tub: 80, sofa: 90 };
+const STAY_PUT = { tub: ['sponge', 'rinse'], sofa: ['sofa'] };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const tg = window.Telegram && window.Telegram.WebApp;
 const cat = createCat();
@@ -35,6 +43,10 @@ let L = null;
 let LH = 0;
 let catX = 90;
 let catY = 0;
+let perch = null;
+let perchUntil = 0;
+let hop = null;
+let lastSofa = 0;
 let floorLimit = Infinity;
 let time = 0;
 let seq = 0;
@@ -206,6 +218,66 @@ function walkTo(x, cb) {
   walk = { x, cb };
 }
 
+const perchSpot = (kind) => (kind === 'tub' ? { x: 36, y: L.F - 18 } : { x: 90, y: L.F - 6 });
+const restY = () => Math.min(L.F + RUG_DY[room], floorLimit);
+const sofaBox = () => ({ x: 40, y: L.F - 60, w: 100, h: 48 });
+
+function awayFromCat() {
+  const x = 20 + Math.random() * 140;
+  return Math.abs(x - catX) < 45 ? (catX < REST_X ? 150 : 30) : x;
+}
+
+function startHop(to, cb) {
+  if (Math.abs(to.x - catX) > 2) cat.facing = to.x > catX ? 1 : -1;
+  cat.play('jump');
+  hop = { x0: catX, y0: catY, x1: to.x, y1: to.y, t: reduced.matches ? 1 : 0, cb };
+}
+
+function mount(kind) {
+  busy = 'hop';
+  walkTo(STAGE[kind], () => startHop(perchSpot(kind), () => {
+    perch = kind;
+    busy = null;
+    cat.facing = 1;
+    cat.play(kind === 'sofa' ? 'sit' : 'idle');
+    refreshActions();
+  }));
+}
+
+function dismount(cb) {
+  const from = perch;
+  perch = null;
+  perchUntil = 0;
+  busy = 'hop';
+  refreshActions();
+  startHop({ x: STAGE[from], y: restY() }, () => {
+    busy = null;
+    cat.play('idle');
+    if (fr && room === 'living' && friendOn() && fr.mode === 'floor' && !fr.hop && !fr.busy && Math.abs(fr.x - catX) < 40) friendWalk(awayFromCat());
+    if (cb) cb();
+    else walkTo(REST_X);
+  });
+}
+
+const standUp = (fn) => (perch && !busy ? dismount(fn) : fn());
+
+function takeSofa(stay) {
+  if (fr && friendOn()) {
+    if (fr.hop) return false;
+    if (fr.mode === 'sofa') friendHop(L.living.sofa.x - 26, H - 76, 'floor', () => friendWalk(awayFromCat()));
+  }
+  lastSofa = time;
+  perchUntil = stay ? time + SOFA_STAY[0] + Math.random() * (SOFA_STAY[1] - SOFA_STAY[0]) : 0;
+  mount('sofa');
+  return true;
+}
+
+function toggleSofa() {
+  if (!free()) return;
+  if (perch === 'sofa') dismount();
+  else if (!takeSofa(false)) hint('busy');
+}
+
 function free() {
   if (state.get().sleeping) {
     hint('sleeping');
@@ -227,6 +299,7 @@ function refreshActions() {
       { id: 'dance', icon: 'dance', label: t('dance') },
       { id: 'wardrobe', icon: 'wardrobe', label: t('wardrobe'), pressed: wardrobeOpen },
       { id: 'water', icon: 'water', label: t('water') },
+      { id: 'sofa', icon: perch === 'sofa' ? 'down' : 'sofa', label: t(perch === 'sofa' ? 'sofaOff' : 'sofaOn') },
       ...(giftShown ? [{ id: 'gift', icon: 'gift', label: t('giftBox') }] : []),
     ],
     kitchen: [
@@ -301,7 +374,10 @@ function resetRoom() {
   bowlHot = false;
   cat.food = null;
   shush();
-  catX = 90;
+  catX = REST_X;
+  perch = null;
+  perchUntil = 0;
+  hop = null;
   lightsOff = state.get().sleeping;
   if (musicOn) {
     music(null);
@@ -327,6 +403,10 @@ function switchTo(name) {
     haptic('warning');
     return;
   }
+  slideTo(name);
+}
+
+function slideTo(name) {
   const from = room;
   const dir = ROOMS.indexOf(name) > ROOMS.indexOf(room) ? 1 : -1;
   switching = true;
@@ -335,7 +415,7 @@ function switchTo(name) {
   if (!reduced.matches) {
     slide = { from, dir, t: 0 };
     cat.facing = dir;
-    cat.play('run', { loop: true });
+    if (!state.get().sleeping) cat.play('run', { loop: true });
   }
   sfx('whoosh');
   haptic();
@@ -548,11 +628,12 @@ function tapFriend() {
 function tapObject(p) {
   const z = L[room];
   if (room === 'living') {
-    if (giftVisible() && inside(z.gift, p, 4)) openGift();
-    else if (inside(z.tv, p)) startGaming();
-    else if (inside(z.wardrobe, p)) toggleWardrobe();
+    if (giftVisible() && inside(z.gift, p, 4)) standUp(openGift);
+    else if (inside(z.tv, p)) standUp(startGaming);
+    else if (inside(z.wardrobe, p)) standUp(toggleWardrobe);
+    else if (inside(sofaBox(), p)) toggleSofa();
   } else if (room === 'kitchen' && inside(z.fridge, p)) toggleFridge();
-  else if (room === 'bath' && inside(z.toilet, p)) tryPotty();
+  else if (room === 'bath' && inside(z.toilet, p)) standUp(tryPotty);
   else if (room === 'bedroom' && (inside(z.sw, p) || inside(z.lamp, p))) toggleLight();
 }
 
@@ -582,7 +663,10 @@ function toggleSponge() {
   if (tool !== 'sponge' && !free()) return;
   tool = tool ? null : 'sponge';
   if (!busy) stopWalk();
-  if (tool) hint('spongeHint');
+  if (tool) {
+    hint('spongeHint');
+    if (!perch) mount('tub');
+  }
   refreshActions();
   haptic();
 }
@@ -1104,8 +1188,8 @@ function friendAction() {
   const sofa = L.living.sofa;
   if (fr.mode === 'sofa') {
     if (r < 0.35) friend.play('wave');
-    else friendHop(sofa.x - 26, floorY, 'floor', () => friendWalk(24 + Math.random() * 130));
-  } else if (r < 0.6) friendWalk(20 + Math.random() * 140);
+    else friendHop(sofa.x - 26, floorY, 'floor', () => friendWalk(awayFromCat()));
+  } else if (r < 0.6 || perch === 'sofa') friendWalk(awayFromCat());
   else friendWalk(sofa.x - 26, () => friendHop(sofa.x, sofa.y, 'sofa'));
 }
 
@@ -1307,7 +1391,9 @@ const handlers = {
   },
   action(id) {
     lastInput = time;
-    ({ console: startGaming, dance: startDance, wardrobe: toggleWardrobe, fridge: toggleFridge, sponge: toggleSponge, rinse, toilet: tryPotty, light: toggleLight, gift: openGift, tea: pourTea, snack: takeSnack, tv: toggleTv, water: waterPlant, book: startReading, curtains: toggleCurtains, brush: startBrushing })[id]();
+    const run = ({ console: startGaming, dance: startDance, wardrobe: toggleWardrobe, fridge: toggleFridge, sponge: toggleSponge, rinse, toilet: tryPotty, light: toggleLight, gift: openGift, tea: pourTea, snack: takeSnack, tv: toggleTv, water: waterPlant, book: startReading, curtains: toggleCurtains, brush: startBrushing, sofa: toggleSofa })[id];
+    if (perch && !busy && !STAY_PUT[perch].includes(id)) dismount(run);
+    else run();
   },
   foodTap(item, rect) {
     lastInput = time;
@@ -1393,7 +1479,7 @@ function pointer(type, p) {
   const dx = p.x - p0.x0;
   const dy = p.y - p0.y0;
   if (!p0.zone && Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(dy) * 1.4) switchBy(dx < 0 ? 1 : -1);
-  else if (p0.zone && room === 'bath' && p0.moved > 10 && inside(L.bath.toilet, p, 4)) tryPotty();
+  else if (p0.zone && room === 'bath' && p0.moved > 10 && inside(L.bath.toilet, p, 4)) standUp(tryPotty);
   else if (p0.moved <= 10 && time - p0.t0 < 0.6) {
     if (p0.zone && tool !== 'sponge') tapCat(p0.zone);
     else if (p0.friend) tapFriend();
@@ -1403,6 +1489,7 @@ function pointer(type, p) {
 
 function idleAction(s) {
   const r = Math.random();
+  if (room === 'living' && time - lastSofa > SOFA_GAP && r < 0.3 && takeSofa(true)) return;
   const poses = POSES[room];
   if (state.wantsSleep() && r < 0.4) {
     cat.play('yawn');
@@ -1443,6 +1530,10 @@ function update(dt) {
   getL();
   state.tick(dt);
   const s = state.get();
+  if (s.sleeping && room !== 'bedroom' && !slide) {
+    slideTo('bedroom');
+    return;
+  }
   for (const tm of [...timers]) {
     tm.t -= dt;
     if (tm.t <= 0 && timers.includes(tm)) {
@@ -1467,9 +1558,25 @@ function update(dt) {
       if (cb) cb();
     } else catX += Math.sign(walk.x - catX) * step;
   }
-  const bed = L.bedroom.bed;
-  const target = Math.min(s.sleeping && room === 'bedroom' ? bed.y + bed.h - BED_SINK : H - 70, floorLimit);
-  catY = catY && !reduced.matches ? catY + (target - catY) * Math.min(1, dt * 10) : target;
+  if (hop) {
+    hop.t = Math.min(1, hop.t + dt / HOP);
+    catX = lerp(hop.x0, hop.x1, hop.t);
+    catY = lerp(hop.y0, hop.y1, hop.t) - Math.sin(Math.PI * hop.t) * HOP_ARC;
+    if (hop.t >= 1) {
+      const cb = hop.cb;
+      hop = null;
+      cb();
+    }
+  } else {
+    const bed = L.bedroom.bed;
+    const target = s.sleeping && room === 'bedroom' ? Math.min(bed.y + bed.h - BED_SINK, floorLimit) : perch ? perchSpot(perch).y : restY();
+    catY = catY && !reduced.matches ? catY + (target - catY) * Math.min(1, dt * 10) : target;
+  }
+  if (perch && !busy) {
+    const done = perch === 'tub' ? !tool && !foam.length && cat.anim === 'idle' : perchUntil > 0 && time > perchUntil;
+    if (done) dismount();
+    else if (perch === 'sofa' && cat.anim === 'idle') cat.play('sit');
+  }
   cat.mood = state.mood();
   cat.dirt = s.needs.clean < 40 ? 1 - s.needs.clean / 100 : 0;
   cat.outfit = { ...s.equipped };
@@ -1500,7 +1607,7 @@ function update(dt) {
       sfx('purr');
     }
   } else if (ptr && ptr.zone && tool !== 'sponge' && ptr.moved <= 10 && time - ptr.t0 > 0.45) beginPet();
-  const calm = !busy && !walk && !ptr && !slide && !s.sleeping && !tool && !fridgeOpen && !wardrobeOpen && cat.anim === 'idle';
+  const calm = !busy && !perch && !walk && !ptr && !slide && !s.sleeping && !tool && !fridgeOpen && !wardrobeOpen && cat.anim === 'idle';
   if (calm && (idleIn -= dt) <= 0) {
     idleIn = 7 + Math.random() * 9;
     idleAction(s);
@@ -1510,7 +1617,7 @@ function update(dt) {
     talkIn = 40 + Math.random() * 50;
     speakSolo();
   }
-  if (quiet && !ptr && room === 'living' && fr && friendOn() && time - lastInput > 15) {
+  if (quiet && !perch && !ptr && room === 'living' && fr && friendOn() && time - lastInput > 15) {
     sceneIn -= dt;
     if (sceneIn <= 0 && !fr.busy && !fr.hop && !fr.walk) {
       sceneIn = 60 + Math.random() * 60;
@@ -1620,6 +1727,12 @@ function drawBedBathFront(ctx) {
   }
 }
 
+function drawFront(ctx) {
+  if (perch === 'tub') drawTubFront(ctx, L);
+  else if (perch === 'sofa') drawSofaFront(ctx, L);
+  else if (room === 'bedroom' && state.get().sleeping) drawBedFront(ctx, L);
+}
+
 function drawParticle(ctx, pt) {
   ctx.globalAlpha = Math.min(1, pt.life * 2);
   ctx.fillStyle = pt.col;
@@ -1653,8 +1766,8 @@ function draw(ctx) {
   } else drawRoomAt(ctx, room, 0);
   if (!catHidden) cat.draw(ctx, catX, catY);
   if (act && !slide) drawActFront(ctx, L, act, time, { x: catX, y: catY, dir: cat.facing }, plantAt(L, floorLimit));
-  if (!slide && room === 'bedroom' && state.get().sleeping) drawBedFront(ctx, L);
   for (const f of foam) drawFoam(ctx, catX + f.dx, catY + f.dy, f.s);
+  if (!slide) drawFront(ctx);
   if (screen) drawScreen(ctx, L);
   if (shower) drawShower(ctx, catX, catY - cat.height - 14, catY, time);
   for (const pt of parts) drawParticle(ctx, pt);
