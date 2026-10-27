@@ -1328,7 +1328,7 @@ export function drawDark(ctx, L, H, t, curtainsClosed) {
     c.save();
     c.translate(6, F + 10);
     c.transform(1, 0, 0.8, 1, 0, 0);
-    c.fillStyle = 'rgba(190, 200, 255, 0.13)';
+    c.fillStyle = 'rgba(190, 200, 255, 0.06)';
     for (const [x, y] of [[0, 0], [21, 0], [0, 22], [21, 22]]) c.fillRect(x, y, 19, 20);
     c.restore();
   }

@@ -148,35 +148,60 @@ export function drawWindowDay(ctx, L, t) {
   ln(0.8, '#ffffff', w.x - 1, w.y + w.h - 0.8, w.x + w.w + 1, w.y + w.h - 0.8);
 }
 
+const BEAM_SHIFT = 14;
+const BEAM_TINT = {
+  day: { beam: '255, 233, 160', beamA: 0.2, spot: '255, 226, 120', spotA: 0.46 },
+  night: { beam: '200, 210, 255', beamA: 0.09, spot: '190, 200, 255', spotA: 0.24 },
+};
+
+function beamPath(w, F, grow) {
+  const top = w.y + w.h - 4;
+  const mid = w.x + w.w / 2;
+  const half = (w.w / 2 - 4) * grow;
+  const bottomHalf = (w.w / 2 + 6) * grow;
+  c.beginPath();
+  c.moveTo(mid - half, top);
+  c.lineTo(mid + half, top);
+  c.lineTo(mid + BEAM_SHIFT + bottomHalf, F + 3);
+  c.lineTo(mid + BEAM_SHIFT - bottomHalf, F + 3);
+  c.closePath();
+}
+
 export function drawWindowLight(ctx, L, t, day, alpha) {
   c = ctx;
   const w = L.bedroom.win;
   const F = L.F;
+  const tint = day ? BEAM_TINT.day : BEAM_TINT.night;
+  const mid = w.x + w.w / 2;
   c.save();
   c.globalAlpha = alpha;
-  const shaft = c.createLinearGradient(0, w.y + w.h, 0, F + 3);
-  shaft.addColorStop(0, day ? 'rgba(255, 233, 160, 0.3)' : 'rgba(200, 210, 255, 0.16)');
-  shaft.addColorStop(1, day ? 'rgba(255, 233, 160, 0.12)' : 'rgba(200, 210, 255, 0.06)');
+  const shaft = c.createLinearGradient(mid, w.y + w.h, mid + BEAM_SHIFT, F + 3);
+  shaft.addColorStop(0, `rgba(${tint.beam}, ${tint.beamA})`);
+  shaft.addColorStop(0.5, `rgba(${tint.beam}, ${tint.beamA * 0.4})`);
+  shaft.addColorStop(1, `rgba(${tint.beam}, 0)`);
   c.fillStyle = shaft;
-  c.beginPath();
-  c.moveTo(w.x + 5, w.y + w.h - 5);
-  c.lineTo(w.x + w.w - 5, w.y + w.h - 5);
-  c.lineTo(44, F + 3);
-  c.lineTo(8, F + 3);
-  c.closePath();
-  c.fill();
+  for (const grow of [1, 0.74, 0.48]) {
+    beamPath(w, F, grow);
+    c.fill();
+  }
   if (day) {
     for (let i = 0; i < 6; i++) {
       const ph = (t * 0.12 + i / 6) % 1;
-      c.globalAlpha = alpha * Math.sin(ph * Math.PI) * 0.8;
-      el(lerp(w.x + 12 + ((i * 17) % 34), 12 + ((i * 9) % 28), ph), lerp(w.y + w.h, F + 4, ph), 0.8, 0.8, '#fffbe6', 0);
+      c.globalAlpha = alpha * Math.sin(ph * Math.PI) * 0.7;
+      el(lerp(w.x + 12 + ((i * 17) % 34), mid + BEAM_SHIFT - 14 + ((i * 9) % 28), ph), lerp(w.y + w.h, F + 4, ph), 0.8, 0.8, '#fffbe6', 0);
     }
-    c.globalAlpha = alpha;
   }
-  c.translate(8, F + 3);
-  c.transform(1, 0, 0.8, 1, 0, 0);
-  c.fillStyle = day ? 'rgba(255, 222, 110, 0.6)' : 'rgba(190, 200, 255, 0.34)';
-  for (const [x, y] of [[0, 0], [19, 0], [0, 15], [19, 15]]) c.fillRect(x, y, 17, 13);
+  c.globalAlpha = alpha * (1 + Math.sin(t * 0.6) * 0.06);
+  c.translate(mid + BEAM_SHIFT - 48, F + 3);
+  c.transform(1, 0, 0.7, 1, 0, 0);
+  for (const [grow, k] of [[3, 0.3], [2, 0.5], [0.8, 1]]) {
+    c.fillStyle = `rgba(${tint.spot}, ${tint.spotA * k})`;
+    for (const [x, y] of [[0, 0], [29, 0], [0, 8.5], [29, 8.5]]) {
+      c.beginPath();
+      c.roundRect(x - grow, y - grow * 0.6, 26 + grow * 2, 7 + grow * 1.2, 2.5 + grow);
+      c.fill();
+    }
+  }
   c.restore();
 }
 

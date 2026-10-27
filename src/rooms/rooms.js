@@ -1269,6 +1269,7 @@ const DEV_COMMANDS = {
   unlock: state.devUnlockAll,
   fill: state.devFillNeeds,
   gift: state.devShowGift,
+  sortAll: () => state.unlockSortAll(),
   friend: devCallFriend,
   yes: devReset,
 };
@@ -1280,9 +1281,17 @@ const handlers = {
       hint('sleeping');
       return;
     }
+    closeShelves();
+    ui.dev(false);
+    sfx('pop');
+    haptic();
+    ui.games(true);
+  },
+  game(id) {
     sfx('tap');
     haptic('medium');
-    go('nyan');
+    ui.games(false);
+    go(id);
   },
   mute() {
     const m = !isMuted();

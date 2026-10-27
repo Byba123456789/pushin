@@ -2,6 +2,7 @@ import { go } from './core/engine.js';
 import * as state from './state/state.js';
 import { registerRooms } from './rooms/rooms.js';
 import { registerNyan } from './nyan/nyan.js';
+import { registerSort } from './sort/sort.js';
 
 const RELOAD_KEY = 'pushin_reload_to';
 
@@ -32,5 +33,6 @@ if (!(await reloadIfOutdated())) {
   await state.load();
   registerRooms();
   registerNyan();
+  registerSort();
   go('living');
 }

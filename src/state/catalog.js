@@ -56,6 +56,7 @@ export const levelAtXp = (xp) => {
   while (xp >= xpAtLevel(level + 1)) level++;
   return level;
 };
+export const SORT = { levels: 100, baseCoins: 5, repeatCoins: 1, firstXp: 4, jarPrice: 20 };
 export const DAILY_BONUS = { base: 20, perStreakDay: 10, max: 60 };
 
 export const FRIENDS = [{ id: 'tommy', name: 'Томми', level: 3 }];

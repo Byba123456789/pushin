@@ -1,4 +1,5 @@
-import { FOOD, OUTFITS, XP, DAILY_BONUS, GIFT, HOME_ACTS, WATER_GAP_HOURS, ACT_XP_GAP_MIN, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
+import { starsFor } from '../sort/logic.js';
+import { FOOD, OUTFITS, XP, SORT, DAILY_BONUS, GIFT, HOME_ACTS, WATER_GAP_HOURS, ACT_XP_GAP_MIN, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
 
 const KEY = 'pushin.v1';
 const SAVE_DELAY_MS = 2000;
@@ -32,7 +33,7 @@ const freshState = () => ({
   coins: 50, xp: 0, level: 1, owned: [], equipped: { head: null, eyes: null, body: null },
   sleeping: false, feeds: 0, best: 0, giftSeen: false, streak: 0, lastDaily: null,
   sleptHours: 0, curtainsClosed: false, lastBrush: 0, infCoins: false, friend: { name: null, equipped: { head: null, eyes: null, body: null } },
-  wateredAt: 0, actXpAt: {}, lastSeen: clock(), version: 1, schema: SCHEMA,
+  wateredAt: 0, actXpAt: {}, sort: { unlocked: 1, done: {} }, lastSeen: clock(), version: 1, schema: SCHEMA,
 });
 
 let s = freshState();
@@ -88,6 +89,17 @@ function migratedXp(x) {
   return xpAtLevel(level) + Math.floor(share * xpToNext(level));
 }
 
+function normalizeSort(x) {
+  const inRange = (n) => Number.isInteger(n) && n >= 1 && n <= SORT.levels;
+  const done = {};
+  for (const [level, stars] of Object.entries(x?.done ?? {})) {
+    if (inRange(Number(level)) && [1, 2, 3].includes(stars)) done[level] = stars;
+  }
+  const top = Math.max(0, ...Object.keys(done).map(Number));
+  const unlocked = Math.max(inRange(x?.unlocked) ? x.unlocked : 1, Math.min(top + 1, SORT.levels));
+  return { unlocked, done };
+}
+
 const normalize = (x) => {
   const f = freshState();
   const xp = x.schema >= SCHEMA ? x.xp : migratedXp(x);
@@ -96,6 +108,7 @@ const normalize = (x) => {
     needs: { ...f.needs, ...x.needs },
     equipped: { ...f.equipped, ...x.equipped },
     actXpAt: { ...x.actXpAt },
+    sort: normalizeSort(x.sort),
     friend: { ...f.friend, ...x.friend, equipped: { ...f.friend.equipped, ...x.friend?.equipped } },
     version: 1, schema: SCHEMA,
   };
@@ -439,6 +452,36 @@ export function recordRun({ score, coins }) {
   s.coins += coins;
   addXp(XP.play);
   changed();
+}
+
+export const sortInfo = () => ({ unlocked: s.sort.unlocked, done: { ...s.sort.done } });
+
+export function finishSort(level, moves, min) {
+  if (!Number.isInteger(level) || level < 1 || level > SORT.levels) return null;
+  const first = !(level in s.sort.done);
+  const stars = starsFor(moves, min);
+  const coins = first ? Math.round(SORT.baseCoins + level / 10) : SORT.repeatCoins;
+  const xp = first ? SORT.firstXp : 0;
+  s.sort.done[level] = Math.max(s.sort.done[level] ?? 0, stars);
+  s.sort.unlocked = Math.max(s.sort.unlocked, Math.min(level + 1, SORT.levels));
+  s.coins += coins;
+  addXp(xp);
+  changed();
+  return { coins, xp, stars, first };
+}
+
+export function unlockSortAll() {
+  s.sort.unlocked = SORT.levels;
+  changed();
+}
+
+export const canBuySortJar = () => canPay(SORT.jarPrice);
+
+export function buySortJar() {
+  if (!canBuySortJar()) return false;
+  pay(SORT.jarPrice);
+  changed();
+  return true;
 }
 
 export const giftReady = () => s.feeds >= GIFT.unlockAfterFeeds && !s.giftSeen;

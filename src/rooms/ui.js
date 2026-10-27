@@ -28,6 +28,8 @@ const navButton = (room) => `<button type="button" class="rm-navbtn" data-room="
 
 const devButton = (cmd, label, cls = '') => `<button type="button" class="rm-buy ${cls}" data-dev="${cmd}">${label}</button>`;
 
+const gameCard = (id, icon) => `<button type="button" class="rm-game" data-game="${id}">${svg(icon, 'rm-gameico')}<b>${t(id === 'nyan' ? 'gameNyan' : 'gameSort')}</b><span>${t(id === 'nyan' ? 'gameNyanSub' : 'gameSortSub')}</span></button>`;
+
 const foodButton = (f) => `<button type="button" class="rm-food" data-food="${f.id}" aria-label="${itemName(f)}, ${t('price', { n: f.price })}">${svg(f.id, 'rm-foodico')}<span class="rm-tag">${svg('coin', 'rm-tagico')}${f.price}</span><span class="rm-fname">${itemName(f)}</span></button>`;
 
 export function createUI(h) {
@@ -44,6 +46,7 @@ export function createUI(h) {
   </div>
   <div class="rm-needs">${NEEDS.map((n) => `<button type="button" class="rm-need" data-need="${n}"><span class="rm-cap"><i></i></span><span class="rm-nico">${svg(n)}</span></button>`).join('')}</div>
 </header>
+<button type="button" class="rm-scrim" data-games="close" aria-label="${t('close')}" hidden></button>
 <div class="rm-mid">
   <div class="rm-toast" role="status" aria-live="polite"></div>
   <section class="rm-panel rm-fridge" hidden aria-labelledby="rm-ft">
@@ -70,11 +73,16 @@ export function createUI(h) {
       <div class="rm-devlevel"><span>${t('devLevel')}</span><button type="button" class="rm-buy" data-dev="down" aria-label="${t('devLevelDown')}">−</button><input class="rm-lvinput" type="number" inputmode="numeric" min="1" max="50" aria-label="${t('devLevel')}"><button type="button" class="rm-buy" data-dev="up" aria-label="${t('devLevelUp')}">+</button></div>
       ${devButton('unlock', t('devUnlock'))}${devButton('fill', t('devFill'))}
       ${devButton('gift', t('devGift'))}${devButton('friend', t('devFriend', { name: itemName(FRIENDS[0]) }))}
+      ${devButton('sortAll', t('devSortAll'))}
       <div class="rm-devreset">${devButton('ask', t('devReset'))}
         <div class="rm-sure" hidden><p>${t('devSure')}</p>${devButton('yes', t('devYes'), 'rm-danger')}${devButton('no', t('devNo'))}</div>
       </div>
     </div>
   </section>` : ''}
+  <section class="rm-panel rm-games" hidden aria-labelledby="rm-gt">
+    <div class="rm-phead"><h2 id="rm-gt">${svg('play')}${t('games')}</h2><button type="button" class="rm-x" data-games="close" aria-label="${t('close')}">${svg('close')}</button></div>
+    <div class="rm-gamegrid">${gameCard('nyan', 'play')}${gameCard('sort', 'sortJar')}</div>
+  </section>
   <div class="rm-say" data-say="cat" aria-live="polite" hidden></div>
   <div class="rm-say rm-say2" data-say="friend" aria-live="polite" hidden></div>
   <button type="button" class="rm-invite" hidden>${svg('invite', 'rm-invico')}<span></span></button>
@@ -100,6 +108,8 @@ export function createUI(h) {
   const wardrobe = $('.rm-wardrobe');
   const items = $('.rm-items');
   const dev = $('.rm-dev');
+  const games = $('.rm-games');
+  const scrim = $('.rm-scrim');
   const nameForm = $('.rm-nameform');
   const nameInput = $('.rm-nameinput');
   const modal = $('.rm-modal');
@@ -118,6 +128,8 @@ export function createUI(h) {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     if (b.dataset.dev) devClick(b.dataset.dev);
+    else if (b.dataset.games) setGames(false);
+    else if (b.dataset.game) h.game(b.dataset.game);
     else if (b.dataset.who) {
       who = b.dataset.who;
       renderWardrobe(lastState, true);
@@ -156,6 +168,14 @@ export function createUI(h) {
     dev.hidden = !open;
     $('.rm-sure').hidden = true;
     $('[data-dev="ask"]').hidden = false;
+  }
+
+  function setGames(open) {
+    const was = !games.hidden;
+    games.hidden = !open;
+    scrim.hidden = !open;
+    if (open) $('.rm-game').focus();
+    else if (was) $('.rm-play').focus();
   }
 
   function devClick(cmd) {
@@ -356,6 +376,7 @@ export function createUI(h) {
       fridge.hidden = !open;
     },
     dev: setDev,
+    games: setGames,
     wardrobe(open) {
       wardrobe.hidden = !open;
       if (open) {

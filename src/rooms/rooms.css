@@ -535,3 +535,25 @@
 @media (prefers-reduced-motion: reduce) {
   .rm *, .rm *::before, .rm *::after { animation: none !important; transition: none !important; }
 }
+.rm-scrim { position: absolute; inset: 0; z-index: 1; background: rgba(75, 46, 30, 0.28); animation: rm-fade 0.25s; }
+@keyframes rm-fade { from { opacity: 0; } }
+.rm-games { background: #fdeef3; }
+.rm-gamegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rm-game {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px 12px !important;
+  background: var(--card) !important;
+  border: var(--bw) solid var(--ink) !important;
+  border-radius: 20px;
+  box-shadow: 0 3px 0 rgba(75, 46, 30, 0.18);
+  text-align: center;
+  transition: transform 0.2s var(--spring);
+}
+.rm-game:active { transform: scale(0.95); }
+.rm-game b { font-size: 18px; font-weight: 900; }
+.rm-game span { font-size: 13px; line-height: 1.25; opacity: 0.8; }
+.rm-gameico { width: 72px; height: 72px; }

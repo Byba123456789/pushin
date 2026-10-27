@@ -2,7 +2,7 @@ import { GIFT, FRIENDS } from '../state/catalog.js';
 
 const RU = {
   living: 'Гостиная', kitchen: 'Кухня', bath: 'Ванная', bedroom: 'Спальня',
-  rooms: 'Комнаты', play: 'Играть', playAria: 'Играть в полёт за монетками',
+  rooms: 'Комнаты', play: 'Играть', playAria: 'Выбрать игру', games: 'Во что поиграем?', gameNyan: 'Полёт', gameNyanSub: 'лети на радуге и собирай монетки', gameSort: 'Переливашки', gameSortSub: 'расставь цвета по баночкам',
   food: 'Еда', clean: 'Чистота', energy: 'Энергия', fun: 'Веселье', potty: 'Туалет',
   needValue: '{name}: {v} из 100',
   coinsAria: 'Монетки: {n}', levelAria: 'Уровень {n}, опыт {xp} из {max}',
@@ -24,17 +24,20 @@ const RU = {
   ok: 'Ура!', close: 'Закрыть',
   giftTitle: 'Тебе подарок', giftFor: '{name}, это тебе', giftPlaceholder: 'Тут будет послание', giftBox: 'Открыть подарок',
   coinsWon: '+{n} монеток',
+  sortLevel: 'Уровень {n}', sortUndo: 'Отмена', sortRestart: 'Заново', sortAddJar: '+ баночка', sortLevels: 'Уровни', sortExit: 'Выход',
+  sortStuck: 'Ходов нет — отмени или начни заново', sortWon: 'Уровень {n} пройден!', sortNext: 'Дальше', sortMoves: 'Ходов: {n}', sortPick: 'Выбери уровень',
+  sortLevelAria: 'Уровень {n}, звёзд: {s}', sortLockedAria: 'Уровень {n} закрыт', sortStarsAria: 'Звёзд: {s} из 3', sortJarPrice: 'Добавить пустую баночку за {n} монеток',
   head: 'Голова', eyes: 'Очки', body: 'Одежда',
   buy: 'Купить', wear: 'Надеть', takeOff: 'Снять', lockedFrom: 'С {n} ур.', price: '{n} монеток',
   whoAria: 'Кого одеваем', giveName: 'Дать имя', nameLabel: 'Имя', nameDone: 'Готово', noOwned: 'Сначала купи вещи для {cat}: {name} сможет их надеть',
   dev: 'Консоль', devCoins: '+1000 монет', devInf: '∞ монет', devLevel: 'Уровень', devLevelDown: 'Уровень минус 1', devLevelUp: 'Уровень плюс 1',
   devUnlock: 'Открыть все вещи', devFill: 'Заполнить все нужды', devGift: 'Показать подарок', devFriend: 'Позвать {name} сейчас',
-  devReset: 'Сбросить прогресс', devSure: 'Точно сбросить весь прогресс?', devYes: 'Да, сбросить', devNo: 'Отмена',
+  devSortAll: 'Все уровни Переливашек', devReset: 'Сбросить прогресс', devSure: 'Точно сбросить весь прогресс?', devYes: 'Да, сбросить', devNo: 'Отмена',
 };
 
 const EN = {
   living: 'Living', kitchen: 'Kitchen', bath: 'Bath', bedroom: 'Bedroom',
-  rooms: 'Rooms', play: 'Play', playAria: 'Play the flying game for coins',
+  rooms: 'Rooms', play: 'Play', playAria: 'Choose a game', games: 'What shall we play?', gameNyan: 'Flight', gameNyanSub: 'fly on a rainbow and catch coins', gameSort: 'Pour Party', gameSortSub: 'sort the colors into jars',
   food: 'Food', clean: 'Clean', energy: 'Energy', fun: 'Fun', potty: 'Potty',
   needValue: '{name}: {v} of 100',
   coinsAria: 'Coins: {n}', levelAria: 'Level {n}, XP {xp} of {max}',
@@ -56,12 +59,15 @@ const EN = {
   ok: 'Yay!', close: 'Close',
   giftTitle: 'A gift for you', giftFor: 'For {name}', giftPlaceholder: 'A message will be here', giftBox: 'Open the gift',
   coinsWon: '+{n} coins',
+  sortLevel: 'Level {n}', sortUndo: 'Undo', sortRestart: 'Restart', sortAddJar: '+ jar', sortLevels: 'Levels', sortExit: 'Exit',
+  sortStuck: 'No moves left — undo or restart', sortWon: 'Level {n} cleared!', sortNext: 'Next', sortMoves: 'Moves: {n}', sortPick: 'Pick a level',
+  sortLevelAria: 'Level {n}, stars: {s}', sortLockedAria: 'Level {n} is locked', sortStarsAria: 'Stars: {s} of 3', sortJarPrice: 'Add an empty jar for {n} coins',
   head: 'Head', eyes: 'Glasses', body: 'Clothes',
   buy: 'Buy', wear: 'Wear', takeOff: 'Take off', lockedFrom: 'From lv {n}', price: '{n} coins',
   whoAria: 'Who to dress', giveName: 'Give a name', nameLabel: 'Name', nameDone: 'Done', noOwned: 'Buy things for {cat} first: {name} can wear them',
   dev: 'Console', devCoins: '+1000 coins', devInf: '∞ coins', devLevel: 'Level', devLevelDown: 'Level minus 1', devLevelUp: 'Level plus 1',
   devUnlock: 'Unlock all items', devFill: 'Fill all needs', devGift: 'Show the gift', devFriend: 'Call {name} now',
-  devReset: 'Reset progress', devSure: 'Really reset all progress?', devYes: 'Yes, reset', devNo: 'Cancel',
+  devSortAll: 'All Pour Party levels', devReset: 'Reset progress', devSure: 'Really reset all progress?', devYes: 'Yes, reset', devNo: 'Cancel',
 };
 
 const EN_NAMES = {
