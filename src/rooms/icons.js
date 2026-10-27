@@ -55,6 +55,14 @@ const SVG = {
   scarf: `<path d="M5 10c7 4.5 15 4.5 22 0v6.5c-7 4.5-15 4.5-22 0z" fill="#f08080"/><path d="M19 17v10h6V15.5" fill="#f08080"/><path d="M19 22h6M10 13.5l1 4.5M15 14.5l.5 4.5" fill="none" stroke="#fff" stroke-width="1.6"/>`,
   sweater: `<path d="M11 5L4.5 9l3 5.5 3-1.2V27h11V13.3l3 1.2 3-5.5L21 5c-1 3.2-9 3.2-10 0z" fill="#f9c2d0"/><path d="M16 10v17M13 13l3 2 3-2M13 18l3 2 3-2" fill="none" stroke="#e88aa3" stroke-width="1.6"/>`,
   unicorn: `<path d="M16 2.5l5.5 14h-11z" fill="${BUTTER}"/><path d="M12.5 11l7-2M11.5 14l9-2.5" fill="none" stroke-width="1.4"/><circle cx="8" cy="22" r="5" fill="${PINK}"/><circle cx="14" cy="25" r="5" fill="${BUTTER}"/><circle cx="20" cy="25" r="5" fill="${MINT}"/><circle cx="25" cy="21" r="5" fill="${SKY}"/>`,
+  bunny_ears: `<path d="M11 27C7 20 6 10 9 4c3 0 5 8 5 23z" fill="#fff"/><path d="M21 27c4-7 5-17 2-23-3 0-5 8-5 23z" fill="#fff"/><path d="M10 22c-1-5-1-10 .5-13M22 22c1-5 1-10-.5-13" fill="none" stroke="${PINK}" stroke-width="2.4"/>`,
+  flower_wreath: `<path d="M4 21c6-6 18-6 24 0" fill="none" stroke="#9fd8a8" stroke-width="3"/><circle cx="7" cy="19" r="3.4" fill="${PINK}"/><circle cx="13" cy="15.5" r="3.4" fill="${BUTTER}"/><circle cx="19.5" cy="15.5" r="3.4" fill="${SKY}"/><circle cx="25.5" cy="19" r="3.4" fill="${PINK}"/>`,
+  wizard_hat: `<path d="M16 2l8 21H8z" fill="#9a86d9"/><rect x="3" y="22" width="26" height="5" rx="2.5" fill="#9a86d9"/><path d="M14 10l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2-1.5-1.4 2-.3z" fill="${BUTTER}" stroke-width="1"/>`,
+  star_glasses: `<path d="M9 9.5l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7zM23 9.5l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="${BUTTER}" stroke-width="1.4"/>`,
+  monocle: `<circle cx="14" cy="15" r="8" fill="#e3f4fd"/><path d="M19.5 21q4 4 3 8" fill="none" stroke="${BUTTER}" stroke-width="1.8"/><path d="M10 12l2-1.5" fill="none" stroke="#fff" stroke-width="1.6"/>`,
+  apron: `<path d="M9 6h14v6l3 2v13H6V14l3-2z" fill="#fff"/><rect x="11" y="17" width="10" height="6" rx="2" fill="${PINK}"/><path d="M9 6l-3-3M23 6l3-3" fill="none" stroke-width="1.6"/>`,
+  tutu: `<rect x="9" y="8" width="14" height="7" rx="2" fill="${PINK}"/><path d="M9 15l-6 9 4-1 2 3 3-3 4 3 4-3 3 3 2-3 4 1-6-9z" fill="#f9c2d0"/>`,
+  cape: `<path d="M9 6h14l5 21H4z" fill="#e57d8f"/><path d="M8 6c3 4 13 4 16 0" fill="#fff3e0"/><circle cx="16" cy="9" r="2" fill="${BUTTER}"/>`,
 };
 
 export function svg(name, cls = 'rm-ico') {

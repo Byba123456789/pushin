@@ -1,4 +1,4 @@
-export const GIFT = { catName: 'Пушин', herName: 'Арина', message: 'Ты самая лучшая', unlockAfterFeeds: 10 };
+export const GIFT = { catName: 'Пушин', message: 'Ты самая лучшая', unlockAfterFeeds: 10 };
 
 export const FOOD = [
   { id: 'cookie', name: 'Печенька', price: 5, food: 20, fun: 2, potty: -6 },
@@ -24,10 +24,30 @@ export const OUTFITS = [
   { id: 'scarf', slot: 'body', name: 'Шарфик', price: 90, level: 2 },
   { id: 'sweater', slot: 'body', name: 'Свитер', price: 150, level: 3 },
   { id: 'unicorn', slot: 'body', name: 'Костюм единорога', price: 300, level: 5 },
+  { id: 'apron', slot: 'body', name: 'Фартучек', price: 60, level: 1 },
+  { id: 'bunny_ears', slot: 'head', name: 'Ушки-зайки', price: 70, level: 2 },
+  { id: 'monocle', slot: 'eyes', name: 'Монокль', price: 90, level: 3 },
+  { id: 'flower_wreath', slot: 'head', name: 'Веночек', price: 120, level: 3 },
+  { id: 'tutu', slot: 'body', name: 'Пачка', price: 180, level: 4 },
+  { id: 'star_glasses', slot: 'eyes', name: 'Очки-звёздочки', price: 160, level: 5 },
+  { id: 'cape', slot: 'body', name: 'Накидка', price: 260, level: 6 },
+  { id: 'wizard_hat', slot: 'head', name: 'Шляпа волшебника', price: 350, level: 6 },
 ];
 
 export const XP = { feed: 5, wash: 5, potty: 3, sleep: 5, play: 10, pet: 1 };
-export const XP_PER_LEVEL = 100;
+const FIRST_LEVEL_XP = 100;
+const LEVEL_GROWTH = 1.4;
+export const xpToNext = (level) => Math.round(FIRST_LEVEL_XP * LEVEL_GROWTH ** (level - 1));
+export const xpAtLevel = (level) => {
+  let sum = 0;
+  for (let l = 1; l < level; l++) sum += xpToNext(l);
+  return sum;
+};
+export const levelAtXp = (xp) => {
+  let level = 1;
+  while (xp >= xpAtLevel(level + 1)) level++;
+  return level;
+};
 export const DAILY_BONUS = { base: 20, perStreakDay: 10, max: 60 };
 
 export const FRIENDS = [{ id: 'tommy', name: 'Томми', level: 3 }];

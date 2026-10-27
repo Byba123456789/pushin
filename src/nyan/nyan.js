@@ -43,7 +43,7 @@ function haptic(kind) {
 function loadCss() {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = new URL('./nyan.css', import.meta.url).href;
+  link.href = new URL('./nyan.css' + new URL(import.meta.url).search, import.meta.url).href;
   document.head.appendChild(link);
 }
 

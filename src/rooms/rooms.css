@@ -318,6 +318,35 @@
 .rm-buy.rm-accent { background: #ffe08a !important; }
 .rm-buy.rm-mint { background: #9fdcc8 !important; }
 .rm-buy:disabled { cursor: default; font-size: 12px !important; opacity: 0.8; }
+.rm-who .rm-tab { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 10px; }
+.rm-namebar { display: flex; gap: 8px; margin-bottom: 10px; }
+.rm-namebtn { width: auto; flex: none; padding: 0 16px !important; }
+.rm-nameform { flex: 1; display: flex; gap: 8px; min-width: 0; }
+.rm-nameform .rm-buy { width: auto; flex: none; padding: 0 14px !important; }
+.rm-nameinput, .rm-lvinput {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  pointer-events: auto;
+}
+.rm-nameinput { flex: 1; }
+.rm-dev { max-height: calc(100% - 24px); overflow-y: auto; }
+.rm-devgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rm-devlevel, .rm-devreset { grid-column: 1 / -1; }
+.rm-devlevel { display: flex; align-items: center; gap: 8px; }
+.rm-devlevel span { flex: 1; }
+.rm-devlevel .rm-buy { width: 44px; flex: none; font-size: 20px !important; }
+.rm-lvinput { width: 72px; text-align: center; }
+.rm-infbtn[aria-pressed='true'] { background: #9fdcc8 !important; }
+.rm-sure { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rm-sure p { grid-column: 1 / -1; margin: 0; text-align: center; }
+.rm-buy.rm-danger { background: #f9a3a3 !important; }
 .rm-invite {
   position: absolute;
   top: 12px;

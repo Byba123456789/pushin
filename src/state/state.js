@@ -1,4 +1,4 @@
-import { FOOD, OUTFITS, XP, XP_PER_LEVEL, DAILY_BONUS, GIFT } from './catalog.js';
+import { FOOD, OUTFITS, XP, DAILY_BONUS, GIFT, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
 
 const KEY = 'pushin.v1';
 const SAVE_DELAY_MS = 2000;
@@ -7,9 +7,14 @@ const CLOUD_TIMEOUT_MS = 5000;
 const PET_XP_GAP_MS = 3000;
 const ANGRY_AFTER_MS = 30 * 60 * 1000;
 const FULL_FOOD = 98;
+const SCHEMA = 2;
+const OLD_XP_PER_LEVEL = 100;
+const SLEEP_XP_HOURS = 0.5;
+const MAX_LEVEL = 50;
+const FRIEND_NAME_MAX = 16;
 const HOUR_MS = 3600 * 1000;
 // fetch вместо import-атрибутов JSON: их нет в старых WebView Telegram
-const rules = await (await fetch(new URL('./rules.json', import.meta.url))).json();
+const rules = await (await fetch(new URL('./rules.json' + new URL(import.meta.url).search, import.meta.url))).json();
 
 let clock = Date.now;
 let storage = globalThis.localStorage;
@@ -25,12 +30,17 @@ const freshState = () => ({
   needs: { food: 80, clean: 80, energy: 80, fun: 80, potty: 80 },
   coins: 50, xp: 0, level: 1, owned: [], equipped: { head: null, eyes: null, body: null },
   sleeping: false, feeds: 0, best: 0, giftSeen: false, streak: 0, lastDaily: null,
-  lastSeen: clock(), version: 1,
+  sleptHours: 0, infCoins: false, friend: { name: null, equipped: { head: null, eyes: null, body: null } },
+  lastSeen: clock(), version: 1, schema: SCHEMA,
 });
 
 let s = freshState();
 
 const clamp = (v) => Math.max(0, Math.min(100, v));
+const canPay = (n) => s.infCoins || s.coins >= n;
+const pay = (n) => {
+  if (!s.infCoins) s.coins -= n;
+};
 // облако Telegram привязано к аккаунту и переживает чистку памяти WebView; есть с Bot API 6.9
 const cloud = () => {
   const tg = globalThis.window?.Telegram?.WebApp;
@@ -70,9 +80,23 @@ export function flush() {
 
 const isSaved = (x) => x && typeof x === 'object' && x.needs && Number.isFinite(x.lastSeen);
 
+// старая кривая: 100 опыта на уровень; сохраняем уровень и долю прогресса внутри него
+function migratedXp(x) {
+  const level = Number.isFinite(x.level) ? Math.max(1, x.level) : 1;
+  const share = Math.min(Math.max(((x.xp ?? 0) - OLD_XP_PER_LEVEL * (level - 1)) / OLD_XP_PER_LEVEL, 0), 0.999);
+  return xpAtLevel(level) + Math.floor(share * xpToNext(level));
+}
+
 const normalize = (x) => {
   const f = freshState();
-  return { ...f, ...x, needs: { ...f.needs, ...x.needs }, equipped: { ...f.equipped, ...x.equipped }, version: 1 };
+  const xp = x.schema >= SCHEMA ? x.xp : migratedXp(x);
+  return {
+    ...f, ...x, xp,
+    needs: { ...f.needs, ...x.needs },
+    equipped: { ...f.equipped, ...x.equipped },
+    friend: { ...f.friend, ...x.friend, equipped: { ...f.friend.equipped, ...x.friend?.equipped } },
+    version: 1, schema: SCHEMA,
+  };
 };
 
 function readLocal() {
@@ -120,7 +144,7 @@ function changed() {
 
 function addXp(n) {
   s.xp += n;
-  const level = 1 + Math.floor(s.xp / XP_PER_LEVEL);
+  const level = levelAtXp(s.xp);
   if (level > s.level) {
     s.level = level;
     emit('levelup', level);
@@ -128,8 +152,10 @@ function addXp(n) {
 }
 
 function wake() {
+  const rested = s.sleptHours >= SLEEP_XP_HOURS;
   s.sleeping = false;
-  addXp(XP.sleep);
+  s.sleptHours = 0;
+  if (rested) addXp(XP.sleep);
 }
 
 function advance(hours) {
@@ -141,6 +167,7 @@ function advance(hours) {
       s.needs[k] = Math.max(rules.floor, s.needs[k] - rate * hours);
     }
   }
+  if (s.sleeping) s.sleptHours += hours;
   if (s.sleeping && s.needs.energy >= 100) wake();
 }
 
@@ -177,8 +204,8 @@ export function tick(dt) {
 
 export function feed(foodId) {
   const food = FOOD.find((f) => f.id === foodId);
-  if (!food || s.coins < food.price || s.needs.food >= FULL_FOOD) return false;
-  s.coins -= food.price;
+  if (!food || !canPay(food.price) || s.needs.food >= FULL_FOOD) return false;
+  pay(food.price);
   s.needs.food = clamp(s.needs.food + food.food);
   s.needs.fun = clamp(s.needs.fun + food.fun);
   s.needs.potty = clamp(s.needs.potty + food.potty);
@@ -217,8 +244,10 @@ export function pet() {
 
 export function setSleeping(v) {
   if (v === s.sleeping) return;
-  if (v) s.sleeping = true;
-  else wake();
+  if (v) {
+    s.sleeping = true;
+    s.sleptHours = 0;
+  } else wake();
   changed();
 }
 
@@ -229,8 +258,8 @@ export function addCoins(n) {
 
 export function buy(outfitId) {
   const item = OUTFITS.find((o) => o.id === outfitId);
-  if (!item || s.owned.includes(item.id) || s.level < item.level || s.coins < item.price) return false;
-  s.coins -= item.price;
+  if (!item || s.owned.includes(item.id) || s.level < item.level || !canPay(item.price)) return false;
+  pay(item.price);
   s.owned.push(item.id);
   changed();
   return true;
@@ -242,6 +271,52 @@ export function equip(slot, id) {
     if (!item || item.slot !== slot || !s.owned.includes(id)) return;
   }
   s.equipped[slot] = id;
+  changed();
+}
+
+export function equipFriend(slot, id) {
+  if (id !== null) {
+    const item = OUTFITS.find((o) => o.id === id);
+    if (!item || item.slot !== slot || !s.owned.includes(id)) return;
+  }
+  s.friend.equipped[slot] = id;
+  changed();
+}
+
+export function nameFriend(name) {
+  s.friend.name = name.trim().slice(0, FRIEND_NAME_MAX) || null;
+  changed();
+}
+
+export function devSetLevel(n) {
+  s.level = Math.min(Math.max(Math.round(n), 1), MAX_LEVEL);
+  s.xp = xpAtLevel(s.level);
+  changed();
+}
+
+export function devUnlockAll() {
+  s.owned = OUTFITS.map((o) => o.id);
+  changed();
+}
+
+export function devFillNeeds() {
+  for (const k of rules.needs) s.needs[k] = 100;
+  changed();
+}
+
+export function devShowGift() {
+  s.giftSeen = false;
+  s.feeds = Math.max(s.feeds, GIFT.unlockAfterFeeds);
+  changed();
+}
+
+export function devToggleInfinite() {
+  s.infCoins = !s.infCoins;
+  changed();
+}
+
+export function devReset() {
+  s = freshState();
   changed();
 }
 

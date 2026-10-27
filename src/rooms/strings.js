@@ -1,4 +1,4 @@
-import { GIFT } from '../state/catalog.js';
+import { GIFT, FRIENDS } from '../state/catalog.js';
 
 const RU = {
   living: 'Гостиная', kitchen: 'Кухня', bath: 'Ванная', bedroom: 'Спальня',
@@ -25,6 +25,10 @@ const RU = {
   coinsWon: '+{n} монеток',
   head: 'Голова', eyes: 'Очки', body: 'Одежда',
   buy: 'Купить', wear: 'Надеть', takeOff: 'Снять', lockedFrom: 'С {n} ур.', price: '{n} монеток',
+  whoAria: 'Кого одеваем', giveName: 'Дать имя', nameLabel: 'Имя', nameDone: 'Готово', noOwned: 'Сначала купи вещи для {cat}: {name} сможет их надеть',
+  dev: 'Консоль', devCoins: '+1000 монет', devInf: '∞ монет', devLevel: 'Уровень', devLevelDown: 'Уровень минус 1', devLevelUp: 'Уровень плюс 1',
+  devUnlock: 'Открыть все вещи', devFill: 'Заполнить все нужды', devGift: 'Показать подарок', devFriend: 'Позвать {name} сейчас',
+  devReset: 'Сбросить прогресс', devSure: 'Точно сбросить весь прогресс?', devYes: 'Да, сбросить', devNo: 'Отмена',
 };
 
 const EN = {
@@ -52,6 +56,10 @@ const EN = {
   coinsWon: '+{n} coins',
   head: 'Head', eyes: 'Glasses', body: 'Clothes',
   buy: 'Buy', wear: 'Wear', takeOff: 'Take off', lockedFrom: 'From lv {n}', price: '{n} coins',
+  whoAria: 'Who to dress', giveName: 'Give a name', nameLabel: 'Name', nameDone: 'Done', noOwned: 'Buy things for {cat} first: {name} can wear them',
+  dev: 'Console', devCoins: '+1000 coins', devInf: '∞ coins', devLevel: 'Level', devLevelDown: 'Level minus 1', devLevelUp: 'Level plus 1',
+  devUnlock: 'Unlock all items', devFill: 'Fill all needs', devGift: 'Show the gift', devFriend: 'Call {name} now',
+  devReset: 'Reset progress', devSure: 'Really reset all progress?', devYes: 'Yes, reset', devNo: 'Cancel',
 };
 
 const EN_NAMES = {
@@ -59,11 +67,15 @@ const EN_NAMES = {
   bow: 'Bow', party_hat: 'Party hat', beanie: 'Beanie', chef_hat: 'Chef hat', crown: 'Crown',
   round_glasses: 'Glasses', sunglasses: 'Sunglasses', heart_glasses: 'Heart glasses',
   bowtie: 'Bow tie', scarf: 'Scarf', sweater: 'Sweater', unicorn: 'Unicorn suit',
+  apron: 'Apron', bunny_ears: 'Bunny ears', monocle: 'Monocle', flower_wreath: 'Flower wreath', tutu: 'Tutu', star_glasses: 'Star glasses', cape: 'Cape', wizard_hat: 'Wizard hat',
 };
 
 const tg = window.Telegram && window.Telegram.WebApp;
 const code = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || navigator.language || 'ru';
 export const lang = /^(ru|uk|be|kk)/i.test(code) ? 'ru' : 'en';
+const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+export const userName = user.first_name || '';
+export const isDev = (user.username || '').toLowerCase() === 'omanns';
 const dict = lang === 'ru' ? RU : EN;
 
 const TALK = {
@@ -123,8 +135,7 @@ const SCENES = {
 };
 
 export function phrases(kind) {
-  const name = GIFT.herName;
-  return TALK[lang][kind].filter((p) => name || !p.includes('{name}')).map((p) => p.replace('{name}', name));
+  return TALK[lang][kind].filter((p) => userName || !p.includes('{name}')).map((p) => p.replace('{name}', () => userName));
 }
 
 export const scenes = SCENES[lang];
@@ -132,6 +143,8 @@ export const scenes = SCENES[lang];
 export function t(key, vars = {}) {
   return dict[key].replace(/\{(\w+)\}/g, (_, k) => (k === 'cat' ? GIFT.catName : vars[k]));
 }
+
+export const friendLabel = (friend) => friend.name || itemName(FRIENDS[0]);
 
 export function itemName(item) {
   return lang === 'ru' ? item.name : EN_NAMES[item.id] || item.name;

@@ -51,6 +51,25 @@ function el(x, y, rx, ry, fill, lw) {
   paint(fill, lw);
 }
 
+const SHADOW = 'rgba(75,46,30,0.13)';
+const shade = (x, y, rx) => el(x, y, rx, 2.4, SHADOW, 0);
+
+function blob(x, y, rx, ry, k, fill, lw) {
+  const n = 7;
+  const p = [];
+  for (let i = 0; i < n; i++) {
+    const a = k + (i * TAU) / n;
+    const m = 1 + 0.13 * Math.sin(i * 2.1 + k * 3);
+    p.push([x + Math.cos(a) * rx * m, y + Math.sin(a) * ry * m]);
+  }
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  c.beginPath();
+  c.moveTo(...mid(p[n - 1], p[0]));
+  for (let i = 0; i < n; i++) c.quadraticCurveTo(...p[i], ...mid(p[i], p[(i + 1) % n]));
+  c.closePath();
+  paint(fill, lw);
+}
+
 function ln(lw, col, ...p) {
   c.beginPath();
   c.moveTo(p[0], p[1]);
@@ -131,6 +150,8 @@ function curtains(w, fill) {
   el(w.x + w.w + 13, w.y - 4, 2, 2, WOOD, 1);
   pth(w.x - 10, w.y - 3, 'M0 0h17c-1 18-7 30-3 52-5 2-9 2-14 0z', fill, 1.2);
   pth(w.x + w.w + 10, w.y - 3, 'M0 0h-17c1 18 7 30 3 52 5 2 9 2 14 0z', fill, 1.2);
+  pth(w.x - 10, w.y - 3, 'M6 6c1 12 0 22 2 40M11 5c0 12-2 20-2 40', null, 0.8);
+  pth(w.x + w.w + 10, w.y - 3, 'M-6 6c-1 12 0 22-2 40M-11 5c0 12 2 20 2 40', null, 0.8);
 }
 
 function pot(x, y, potFill) {
@@ -173,6 +194,9 @@ function drawLiving(H, L) {
   frame(150, F - 170, 22, 20, '#fff3e6');
   heart(161, F - 161, 1.3, PINK, 0.9);
   const wd = L.living.wardrobe;
+  shade(24, F + 7, 26);
+  shade(164, F + 7, 25);
+  shade(90, F + 5, 56);
   rr(wd.x + 3, wd.y + 6, 42, 120, 4, CREAM, 1.3);
   rr(wd.x, wd.y, 48, 9, 3, WOOD, 1.3);
   rr(wd.x + 7, wd.y + 16, 15, 98, 3, '#f9cad5', 1.1);
@@ -194,6 +218,7 @@ function drawLiving(H, L) {
   el(150, F - 94, 1.6, 1.6, PINK, 1);
   el(172, F - 94, 1.6, 1.6, PINK, 1);
   rr(143, F - 84, 36, 34, 7, MINT, 1.3);
+  ln(1.2, '#e6f7f1', 146, F - 62, 146, F - 77);
   rr(147, F - 80, 24, 26, 5, '#61707f', 1.1);
   ln(1.2, '#8c9cad', 150, F - 76, 154, F - 76);
   el(175, F - 73, 1.5, 1.5, '#fff', 0.9);
@@ -204,6 +229,7 @@ function drawLiving(H, L) {
   ln(1.1, INK, 90, F - 56, 90, F - 28);
   rr(40, F - 28, 100, 24, 8, '#f9b8c9', 1.3);
   ln(1.1, INK, 90, F - 26, 90, F - 6);
+  pth(54, F - 22, 'M0 0q8 4 16 0M46 2q8 3 14 0M70 0q8 4 16 0', null, 0.8);
   rr(29, F - 42, 19, 44, 9, '#f7a9bd', 1.3);
   rr(132, F - 42, 19, 44, 9, '#f7a9bd', 1.3);
   pth(36, F + 2, 'M0 0h7l-1.5 6h-4z', WOOD, 1);
@@ -242,7 +268,9 @@ function drawKitchen(H, L) {
   ln(1, INK, 90, F - 172, 86, F - 170);
   const w = L.kitchen.win;
   windowFrame(w, false);
-  ln(1.2, INK, w.x - 2, w.y + 26, w.x + w.w + 2, w.y + 26);
+  ln(1.3, INK, w.x + 4, w.y + 26, w.x + w.w - 4, w.y + 26);
+  el(w.x + 4, w.y + 26, 2, 2, WOOD, 1);
+  el(w.x + w.w - 4, w.y + 26, 2, 2, WOOD, 1);
   c.save();
   c.beginPath();
   c.rect(w.x + 3, w.y + 27, w.w - 6, 22);
@@ -255,8 +283,11 @@ function drawKitchen(H, L) {
   c.restore();
   pth(w.x + 3, w.y + 49, `M0 0${'q2.5 3 5 0'.repeat(10)}`, null, 1.1);
   const f = L.kitchen.fridge;
+  shade(26, F + 9, 29);
+  shade(154, F + 7, 32);
   rr(f.x + 3, f.y, 46, 138, 8, '#bfe9db', 1.3);
   ln(1.2, INK, f.x + 3, f.y + 44, f.x + 49, f.y + 44);
+  ln(1.6, 'rgba(255,255,255,0.75)', f.x + 10, f.y + 12, f.x + 10, f.y + 34);
   rr(f.x + 41, f.y + 12, 4, 20, 2, CREAM, 1.1);
   rr(f.x + 41, f.y + 54, 4, 30, 2, CREAM, 1.1);
   heart(f.x + 16, f.y + 62, 1.4, PINK, 0.9);
@@ -274,6 +305,7 @@ function drawKitchen(H, L) {
   for (const [x, h, lid] of [[128, 14, PINK], [142, 11, MINT], [156, 16, BUTTER], [170, 12, LILAC]]) {
     rr(x, F - 98 - h, 10, h, 3, CREAM, 1);
     rr(x - 1, F - 100 - h, 12, 4, 2, lid, 1);
+    ln(1, '#e3f4fd', x + 2.5, F - 95 - h, x + 2.5, F - 99);
   }
   rr(124, F - 40, 60, 46, 3, CREAM, 1.3);
   rr(128, F - 33, 23, 36, 3, '#fff1dd', 1);
@@ -281,11 +313,20 @@ function drawKitchen(H, L) {
   el(146, F - 16, 1.6, 1.6, WOOD, 1);
   el(160, F - 16, 1.6, 1.6, WOOD, 1);
   rr(120, F - 48, 64, 9, 3, WOOD, 1.3);
-  pth(132, F - 48, 'M3 0c-2-10 2-17 11-17s13 7 11 17z', PINK, 1.2);
-  pth(156, F - 58, 'M0 0c4 0 6-3 8-6', null, 1.3);
-  el(146, F - 66, 6, 2.2, '#f9c2d0', 1.1);
-  el(146, F - 69, 2, 2, BUTTER, 1);
-  pth(134, F - 60, 'M0 0c-5 1-6 8-1 10', null, 1.2);
+  shade(146, F - 47.5, 15);
+  c.beginPath();
+  c.moveTo(135.5, F - 59);
+  c.bezierCurveTo(125, F - 62, 125, F - 49, 135.5, F - 51);
+  line(4.4, INK);
+  c.beginPath();
+  c.moveTo(135.5, F - 59);
+  c.bezierCurveTo(125, F - 62, 125, F - 49, 135.5, F - 51);
+  line(2, PINK);
+  pth(153, F - 55, 'M0-2C4-3 7-6 8-10l3 1C10-4 7 0 0 2z', PINK, 1.2);
+  pth(132, F - 48, 'M2 0c-3-8 0-17 12-17s15 9 12 17z', PINK, 1.2);
+  ln(1.3, '#ffffff', 137, F - 56, 138, F - 60);
+  el(146, F - 65, 7.5, 2.4, '#f9c2d0', 1.1);
+  el(146, F - 69, 2.2, 2.2, BUTTER, 1);
 }
 
 function drawBath(H, L) {
@@ -295,8 +336,14 @@ function drawBath(H, L) {
   for (let i = 0; i < 60; i++) {
     const x = (i * 53) % W;
     const y = (i * 37) % Math.max(1, F - 80);
-    el(x, y, 1.5 + (i % 3), 1.5 + (i % 3), null, 0);
+    const br = 1.2 + ((i * 7) % 5) * 0.7;
+    el(x, y, br, br, null, 0);
     line(0.6, '#bcdcf0');
+    if (br > 2.4) {
+      c.beginPath();
+      c.arc(x, y, br * 0.62, Math.PI * 1.1, Math.PI * 1.55);
+      line(0.6, '#ffffff');
+    }
   }
   for (let y = F - 74; y < F - 4; y += 9) {
     for (let x = 0; x < W; x += 11) {
@@ -328,16 +375,20 @@ function drawBath(H, L) {
   el(90, F - 108, 17, 21, '#ffe2a6', 1.3);
   el(90, F - 108, 13, 17, '#e6f5fd', 1);
   ln(1.4, '#ffffff', 83, F - 114, 89, F - 120);
+  ln(1, '#ffffff', 79, F - 104, 80, F - 98);
   ln(1.4, '#ffffff', 84, F - 107, 93, F - 116);
   rr(132, F - 110, 48, 4, 2, CREAM, 1.1);
   for (const [x, w, h, fill] of [[136, 8, 16, PINK], [148, 9, 12, MINT], [162, 7, 18, BUTTER]]) {
     rr(x, F - 110 - h, w, h, 3, fill, 1);
     rr(x + w / 2 - 1.5, F - 113 - h, 3, 3, 1, CREAM, 0.8);
   }
-  el(118, F - 72, 4, 4, null, 1.1);
-  rr(115, F - 79, 6, 3, 1.5, '#d9e4ec', 1);
-  rr(112, F - 68, 12, 24, 3, '#bfe9db', 1.1);
-  ln(1, '#ffffff', 112, F - 50, 124, F - 50);
+  rr(106, F - 44, 36, 4, 2, CREAM, 1.1);
+  ln(1.1, INK, 112, F - 40, 112, F - 34);
+  ln(1.1, INK, 136, F - 40, 136, F - 34);
+  rr(113, F - 68, 11, 24, 3, '#bfe9db', 1.1);
+  rr(116, F - 72, 5, 4, 1.5, '#d9e4ec', 1);
+  ln(1, '#ffffff', 113, F - 50, 124, F - 50);
+  ln(1.1, '#ffffff', 116, F - 63, 116, F - 56);
   ln(1.1, INK, 0, F - 132, 74, F - 132);
   rr(71, F - 136, 6, 8, 2, '#d9e4ec', 1);
   pth(0, F - 131, 'M0 0h20c-4 30 3 58-3 92H0z', '#f9cad5', 1.3);
@@ -345,19 +396,30 @@ function drawBath(H, L) {
   ln(2.8, INK, 34, F - 108, 34, F - 126, 44, F - 126);
   ln(1.4, '#cfdae3', 34, F - 108, 34, F - 126, 44, F - 126);
   el(34, F - 104, 7, 3.2, '#d9e4ec', 1.2);
+  shade(36, F + 14, 44);
   rr(14, F, 8, 13, 3, BUTTER, 1);
   rr(50, F, 8, 13, 3, BUTTER, 1);
   pth(-4, F - 34, 'M0 0h78v14c0 14-10 22-22 22H22C10 36 0 28 0 14z', '#ffffff', 1.3);
   rr(-6, F - 40, 82, 8, 4, '#f7fbff', 1.3);
-  for (const [x, y, rx] of [[8, F - 43, 7], [20, F - 46, 8], [33, F - 43, 6], [44, F - 44, 5]]) el(x, y, rx, rx * 0.65, '#ffffff', 1);
+  const foam = [[19, F - 48, 9, 7.5, 1], [8, F - 43, 7.5, 5.5, 0.3], [33, F - 45, 7, 6, 2], [44, F - 43, 5.5, 4.5, 0.6], [25, F - 42, 6.5, 4.5, 1.7]];
+  for (const [x, y, rx, ry, k] of foam) blob(x, y, rx, ry, k, '#ffffff', 2.4);
+  for (const [x, y, rx, ry, k] of foam) blob(x, y, rx, ry, k, '#ffffff', 0);
+  for (const [x, y, rx, ry] of foam) {
+    c.beginPath();
+    c.arc(x, y, Math.min(rx, ry) * 0.62, 0.1, 1.2);
+    line(0.7, '#bcdcf0');
+  }
+  el(14, F - 59, 2.2, 2.2, '#e9f6fd', 0.7);
+  el(38, F - 56, 1.5, 1.5, '#e9f6fd', 0.7);
+  ln(0.6, '#ffffff', 13, F - 60, 14.5, F - 60.6);
   el(58, F - 45, 6.5, 4.5, BUTTER, 1.1);
   el(62, F - 51, 4, 4, BUTTER, 1.1);
   pth(65, F - 52, 'M0 0l4 1-4 2z', '#ffa76b', 0.9);
   el(63, F - 52, 0.8, 0.8, INK, 0);
-  rr(127, F - 42, 9, 11, 2, CREAM, 1);
-  ln(1.1, INK, 125, F - 42, 138, F - 42);
-  rr(124, F - 46, 14, 3, 1.5, '#d9e4ec', 1);
+  rr(128, F - 55, 9, 11, 2, CREAM, 1);
+  rr(126, F - 58, 13, 3, 1.5, '#d9e4ec', 1);
   const t = L.bath.toilet;
+  shade(t.x + 21, F + 12, 24);
   rr(t.x + 7, t.y + 2, 28, 24, 6, '#ffffff', 1.3);
   el(t.x + 21, t.y + 14, 2.2, 2.2, PINK, 0);
   for (const [dx, dy] of [[-3, -3], [0, -4.2], [3, -3]]) el(t.x + 21 + dx, t.y + 14 + dy, 0.9, 0.9, PINK, 0);
@@ -390,10 +452,13 @@ function drawBedroom(H, L) {
   rr(116, F - 124, 64, 4, 2, WOOD, 1.1);
   for (const [x, h, fill] of [[120, 16, PINK], [126, 14, MINT], [132, 17, LILAC], [138, 13, BUTTER]]) rr(x, F - 124 - h, 6, h, 1.5, fill, 1);
   el(158, F - 131, 7, 6, '#b3a89e', 1.1);
+  ln(1, '#d8cfc6', 154, F - 134, 156, F - 136);
   pth(153, F - 136, 'M0 0l1-4 3 2M10 0l-1-4-3 2', '#b3a89e', 1);
   el(156, F - 131, 0.8, 0.8, INK, 0);
   el(160, F - 131, 0.8, 0.8, INK, 0);
   pot(172, F - 126, '#f9cad5');
+  shade(20, F + 7, 22);
+  shade(159, F + 7, 23);
   rr(2, F - 50, 36, 56, 3, '#f6e3c8', 1.3);
   ln(1.1, INK, 2, F - 24, 38, F - 24);
   for (const [x, h, fill] of [[6, 20, PINK], [12, 18, '#a9d4f5'], [18, 21, MINT], [24, 17, BUTTER]]) rr(x, F - 25 - h, 6, h, 1.5, fill, 1);
@@ -475,6 +540,7 @@ function lamp(F, lit) {
     c.fillRect(135, F - 88, 48, 48);
   }
   pth(147, F - 80, 'M4 0h16l4 20H0z', lit ? '#fff0b8' : '#f9cad5', 1.2);
+  ln(1.2, '#ffffff', 151, F - 76, 149.5, F - 66);
 }
 
 export function drawLife(ctx, name, L, t, f) {
@@ -616,7 +682,8 @@ export function drawBowl(ctx, x, y, img, hot) {
   if (img && img.complete) c.drawImage(img, -10, -26, 20, 20);
   pth(-15, -11, 'M0 0h30c0 8-6 12-15 12S0 8 0 0z', PINK, 1.1);
   el(0, -11, 15, 3.2, '#f9c2d0', 1);
-  el(0, -4, 2.2, 2.2, '#ffffff', 0);
-  for (const [dx, dy] of [[-2.5, -2.6], [0, -3.6], [2.5, -2.6]]) el(dx, -4 + dy, 0.9, 0.9, '#ffffff', 0);
+  el(0, -1.6, 2.9, 2.3, '#ffffff', 0);
+  for (const [dx, dy] of [[-3.9, -4.6], [-1.4, -6.2], [1.4, -6.2], [3.9, -4.6]]) el(dx, dy, 1.15, 1.4, '#ffffff', 0);
+  ln(0.9, 'rgba(255,255,255,0.7)', -11, -8, -9, -4);
   c.restore();
 }

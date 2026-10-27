@@ -7,7 +7,7 @@ import { GIFT, FRIENDS } from '../state/catalog.js';
 import { layout, background, drawLife, drawDark, drawScreen, drawShower, drawSponge, drawFoam, drawBowl } from './backgrounds.js';
 import { iconImage } from './icons.js';
 import { createUI } from './ui.js';
-import { t, itemName, phrases, scenes } from './strings.js';
+import { t, friendLabel, userName, phrases, scenes } from './strings.js';
 
 const ROOMS = ['living', 'kitchen', 'bath', 'bedroom'];
 const DANCES = ['dance1', 'dance2', 'dance3'];
@@ -126,7 +126,7 @@ function hint(key, vars) {
 const catHit = (x, y) => (catHidden ? null : cat.hit(catX, catY, x, y));
 const mouth = () => ({ x: catX, y: catY - cat.height * 0.5 });
 const friendOn = () => state.get().level >= FRIEND.level;
-const friendName = () => itemName(FRIEND);
+const friendName = () => friendLabel(state.get().friend);
 const giftVisible = () => state.giftReady();
 
 function say(id, text, dur = 3.6) {
@@ -266,6 +266,7 @@ function resetRoom() {
   if (ui) {
     ui.fridge(false);
     ui.wardrobe(false);
+    ui.dev(false);
   }
   if (!lightsOff) cat.play('idle');
 }
@@ -344,7 +345,7 @@ function exit() {
 }
 
 function onKey(e) {
-  if (!ui || ui.modalOpen()) return;
+  if (!ui || ui.modalOpen() || e.target instanceof HTMLInputElement) return;
   if (e.key === 'ArrowLeft') switchBy(-1);
   if (e.key === 'ArrowRight') switchBy(1);
 }
@@ -515,6 +516,7 @@ function toggleFridge() {
   if (!fridgeOpen && !free()) return;
   fridgeOpen = !fridgeOpen;
   walk = null;
+  if (fridgeOpen) ui.dev(false);
   ui.fridge(fridgeOpen);
   refreshActions();
   sfx('pop');
@@ -525,6 +527,7 @@ function toggleWardrobe() {
   if (!wardrobeOpen && !free()) return;
   wardrobeOpen = !wardrobeOpen;
   walk = null;
+  if (wardrobeOpen) ui.dev(false);
   ui.wardrobe(wardrobeOpen);
   refreshActions();
   sfx('pop');
@@ -735,7 +738,7 @@ function openGift() {
         ui.modal({
           gift: true,
           title: t('giftTitle'),
-          sub: GIFT.herName ? t('giftFor', { name: GIFT.herName }) : '',
+          sub: userName ? t('giftFor', { name: userName }) : '',
           text: GIFT.message || t('giftPlaceholder'),
           icon: 'gift',
           onClose: () => {
@@ -898,6 +901,42 @@ function updateFriend(dt) {
   friend.update(dt);
 }
 
+function devLevel(n) {
+  state.devSetLevel(n);
+  prevLevel = Math.min(prevLevel, state.get().level);
+}
+
+function devCallFriend() {
+  const called = friendOn();
+  devLevel(Math.max(state.get().level, FRIEND.level));
+  if (called && room === 'living') {
+    resetFriend();
+    friend.play('wave');
+  }
+}
+
+function devReset() {
+  state.devReset();
+  prevLevel = 1;
+}
+
+const DEV_COMMANDS = {
+  open() {
+    if (wardrobeOpen) toggleWardrobe();
+    if (fridgeOpen) toggleFridge();
+  },
+  coins: () => state.addCoins(1000),
+  inf: state.devToggleInfinite,
+  level: devLevel,
+  up: () => devLevel(state.get().level + 1),
+  down: () => devLevel(state.get().level - 1),
+  unlock: state.devUnlockAll,
+  fill: state.devFillNeeds,
+  gift: state.devShowGift,
+  friend: devCallFriend,
+  yes: devReset,
+};
+
 const handlers = {
   nav: switchTo,
   play() {
@@ -940,7 +979,25 @@ const handlers = {
       if (phase === 'drop' && nearBowl(p) && canFeed(item)) putInBowl(item);
     }
   },
-  outfit(item, act) {
+  friendOn,
+  rename(name) {
+    state.nameFriend(name);
+    refreshInvite();
+  },
+  dev(cmd, arg) {
+    DEV_COMMANDS[cmd](arg);
+  },
+  outfit(item, act, who) {
+    if (who === 'friend') {
+      state.equipFriend(item.slot, act === 'wear' ? item.id : null);
+      if (act === 'wear' && fr && !fr.busy) {
+        friend.play('wave');
+        friend.emit('heart');
+      }
+      sfx(act === 'wear' ? 'jump' : 'tap');
+      haptic();
+      return;
+    }
     if (act === 'buy') {
       if (!state.buy(item.id)) {
         broke();
@@ -1067,6 +1124,7 @@ function update(dt) {
   cat.mood = state.mood();
   cat.dirt = s.needs.clean < 40 ? 1 - s.needs.clean / 100 : 0;
   cat.outfit = { ...s.equipped };
+  if (friend) friend.outfit = { ...s.friend.equipped };
   cat.sleeping = s.sleeping;
   if (lightsOff && !s.sleeping && busy !== 'sleep') {
     lightsOff = false;
