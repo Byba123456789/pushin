@@ -149,7 +149,7 @@ export function geometry(P, alt) {
   const groups = [[], []];
   const pts = base.map(([x0, y0], i) => {
     let x = x0;
-    let y = y0;
+    let y = P.legs ? Math.min(y0, -2) : y0;
     if (M.earY !== undefined && y < M.earY) groups[x < M.earX ? 0 : 1].push(i);
     if (M.paws && P.pw) {
       M.paws.forEach((px, k) => {

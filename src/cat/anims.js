@@ -74,9 +74,9 @@ const fly = [
 
 const WV = { ...PEAR, fp: null };
 const wave = [
-  f(110, WV), f(70, { ...WV, pR: [19, 10], sh: -1 }),
-  ...rep(3, [f(130, { ...WV, pR: [21, 3], eyes: 'happy', tail: -150 }), f(120, { ...WV, pR: [23, -2], eyes: 'happy', tail: -140 })]),
-  f(80, { ...WV, pR: [19, 10] }), f(130, PEAR),
+  f(110, WV), f(70, { ...WV, pR: [26, 10], sh: -1 }),
+  ...rep(3, [f(130, { ...WV, pR: [28, 3], eyes: 'happy', tail: -150 }), f(120, { ...WV, pR: [29, -2], eyes: 'happy', tail: -140 })]),
+  f(80, { ...WV, pR: [26, 10] }), f(130, PEAR),
 ];
 
 const XD = { eyes: 'x', mouth: 'laugh' };
@@ -118,12 +118,12 @@ const gaming = [
   ...press,
 ];
 
-const D1 = { body: 'front', fp: 'c', mouth: 'open' };
+const D1 = { body: 'front', fp: null, mouth: 'open' };
 const dance1 = rep(2, [
   { fpo: [0, 0], tail: -150, rot: 0.02 }, { fpo: [-3, 2], tail: -150, rot: 0.03 }, { fpo: [-1, -2], tail: -25, ts: 1, tw: -22, rot: 0 },
   { fpo: [2, -3], tail: -25, ts: 1, tw: -22, rot: -0.03 }, { fpo: [0, 0], tail: -150, rot: -0.02 }, { fpo: [2, -2], tail: -150, rot: 0 },
   { fpo: [-2, 2], tail: -25, ts: 1, tw: -22, rot: 0.02 }, { fpo: [-3, 1], tail: -25, ts: 1, tw: -22, rot: 0.03, fx: 'note' },
-].map((p) => f(100, { ...D1, ...p })));
+].map(({ fpo: [l, r], ...p }) => f(100, { ...D1, ...p, pL: [-37, 26 + l * 2], pR: [37, 26 + r * 2] })));
 
 const D2 = { eyes: 'happy', mouth: 'open' };
 const half = (fl) => [
@@ -234,8 +234,8 @@ const music = rep(2, [
 
 const PI_ = { ...PEAR, prop: 'piano', fp: null, eyes: 'content', mouth: 'w' };
 const piano = rep(4, [
-  f(80, { ...PI_, pL: [-10, 29], pR: [6, 27] }), f(80, { ...PI_, pL: [-10, 27], pR: [6, 29], fx: 'note', fxp: 0.4 }),
-  f(80, { ...PI_, pL: [-7, 29], pR: [9, 27] }), f(80, { ...PI_, pL: [-7, 27], pR: [9, 29], sh: 0.6 }),
+  f(80, { ...PI_, pL: [-10, 44], pR: [6, 42] }), f(80, { ...PI_, pL: [-10, 42], pR: [6, 44], fx: 'note', fxp: 0.4 }),
+  f(80, { ...PI_, pL: [-7, 44], pR: [9, 42] }), f(80, { ...PI_, pL: [-7, 42], pR: [9, 44], sh: 0.6 }),
 ]);
 
 const BX = { ...PEAR, prop: 'box' };
@@ -247,7 +247,7 @@ const box = [
 
 const YA = { prop: 'yarn', eyes: 'content', mouth: 'w', sh: 4, sw: 2 };
 const yarn = rep(3, [
-  f(120, { ...YA, pv: 0 }), f(60, { ...YA, pv: 0, pR: [22, 12] }), f(60, { ...YA, pv: 1, pR: [26, 15] }),
+  f(120, { ...YA, pv: 0 }), f(60, { ...YA, pv: 0, pR: [30, 44] }), f(60, { ...YA, pv: 1, pR: [34, 46] }),
   f(100, { ...YA, pv: 2 }), f(100, { ...YA, pv: 3, tail: -150 }), f(120, { ...YA, pv: 0, tail: -168 }),
 ]);
 
@@ -286,7 +286,7 @@ const love = rep(3, [f(150, { ...LV, pv: 0, eb: 6 }), f(150, { ...LV, pv: 1 }), 
 const BA = { body: 'ball', eyes: 'happy' };
 const ball = [f(90, { sh: 3, sw: 2 }), ...rep(4, [f(150, { ...BA, rot: 0.14 }), f(110, { ...BA, rot: 0, sh: 1 }), f(150, { ...BA, rot: -0.14 }), f(110, { ...BA, rot: 0, sh: 1 })]), f(90, { sh: 3, sw: 2 })];
 
-const PS = { prop: 'pillow', sh: 6, sw: 2, ea: 6, tail: -176, tw: 6 };
+const PS = { prop: 'pillow', sh: 6, sw: 2, rot: -0.14, rest: 1, ea: 6, tail: -176, tw: 6 };
 const pillowsleep = [
   ...rep(3, [f(50, { ...PS, pw: [[0, 2]] }), f(40, { ...PS }), f(50, { ...PS, pw: [null, [0, 2]] }), f(40, { ...PS })]),
   ...rep(3, [f(450, { ...PS, eyes: 'sleep', fx: 'zzz', fxp: 0.5 }), f(150, { ...PS, eyes: 'sleep', sh: 5.2 }), f(450, { ...PS, eyes: 'sleep', sh: 4.8, sw: 2.6 }), f(150, { ...PS, eyes: 'sleep', sh: 5.4 })]),
@@ -299,12 +299,12 @@ const BL = { prop: 'blanket', eyes: 'closed', sh: 3 };
 const blanket = rep(3, [f(300, BL), f(150, { ...BL, sh: 2.4 }), f(300, { ...BL, sh: 2, sw: 0.6 }), f(150, { ...BL, sh: 2.6 })]);
 
 const PA = { prop: 'paint', paint: 1, eyes: 'happy' };
-const paint = rep(3, [f(140, { ...PA, pR: [16, 18] }), f(100, { ...PA, pR: [10, 20] }), f(140, { ...PA, pR: [4, 19], tail: -150 }), f(100, { ...PA, pR: [10, 18] })]);
+const paint = rep(3, [f(140, { ...PA, pR: [18, 43] }), f(100, { ...PA, pR: [12, 45] }), f(140, { ...PA, pR: [6, 44], tail: -150 }), f(100, { ...PA, pR: [12, 43] })]);
 
 const LI = { ...PEAR, prop: 'lights', eyes: 'content' };
 const lights = rep(3, [f(300, { ...LI, pv: 0 }), f(300, { ...LI, pv: 1, sh: -0.5 }), f(300, { ...LI, pv: 2 }), f(300, { ...LI, pv: 3, sh: -0.5 })]);
 
-const HG = { ...PEAR, eyes: 'happy', blush: 1, fp: null, pR: [22, 10] };
+const HG = { ...PEAR, eyes: 'happy', blush: 1, fp: null, pR: [28, 8] };
 const hug = rep(4, [f(160, { ...HG, rot: 0.03 }), f(160, { ...HG, rot: 0.05, fx: 'heart', fxp: 0.3 }), f(160, { ...HG, rot: 0.03 }), f(160, { ...HG, rot: 0.01 })]);
 
 const sit = seq([{ tail: -165 }, { sh: 0.6, tail: -158 }, { sh: 0.8, tail: -150 }, { sh: 0.4, tail: -158 }], 200, PEAR);

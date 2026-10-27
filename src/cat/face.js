@@ -162,7 +162,7 @@ export function drawFace(ctx, g, P, pal, lw) {
   ctx.lineWidth = lw * 0.82;
   const [lx, ly] = P.look || [0, 0];
   for (const s of [-1, 1]) eye(ctx, P.eyes, s * es + lx, ly, s, lw);
-  if (P.brows) {
+  if (P.brows && !g.hideBrows) {
     for (const s of [-1, 1]) {
       const x = s * es;
       const y = -4.6;

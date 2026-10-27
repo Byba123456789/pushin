@@ -248,6 +248,11 @@ function book(ctx, g, pv) {
   ctx.translate(x, y);
   rr(ctx, -12, -24, 24, 23, 1.5);
   ink(ctx, '#c99a6b');
+  for (const s of [-1, 1]) {
+    ctx.beginPath();
+    ctx.ellipse(s * 12, -12, 3.4, 3, 0, 0, Math.PI * 2);
+    ink(ctx, '#b3a89e', 1.6);
+  }
   ctx.beginPath();
   ctx.moveTo(0, -24);
   ctx.lineTo(0, -1);
@@ -415,21 +420,25 @@ function foam(ctx, g, pv) {
 }
 
 function pillow(ctx, g) {
-  const x = g.R + 4;
+  ctx.save();
+  const inv = g.m.inverse();
+  ctx.transform(inv.a, inv.b, inv.c, inv.d, inv.e, inv.f);
+  const x = g.face.x - 3;
   const y = g.bot;
   ctx.beginPath();
-  ctx.moveTo(x - 30, y - 3);
-  ctx.quadraticCurveTo(x - 33, y - 34, x - 24, y - 38);
-  ctx.quadraticCurveTo(x, y - 44, x + 24, y - 37);
-  ctx.quadraticCurveTo(x + 33, y - 18, x + 25, y);
-  ctx.quadraticCurveTo(x, y + 2, x - 30, y - 3);
+  ctx.moveTo(x - 30, y - 2);
+  ctx.quadraticCurveTo(x - 33, y - 17, x - 24, y - 21);
+  ctx.quadraticCurveTo(x, y - 25, x + 26, y - 21);
+  ctx.quadraticCurveTo(x + 34, y - 12, x + 28, y);
+  ctx.quadraticCurveTo(x, y + 2, x - 30, y - 2);
   ink(ctx, '#fffaf2', 1.5);
   ctx.beginPath();
-  ctx.moveTo(x + 22, y - 33);
-  ctx.quadraticCurveTo(x + 18, y - 18, x + 21, y - 4);
+  ctx.moveTo(x + 25, y - 18);
+  ctx.quadraticCurveTo(x + 22, y - 10, x + 24, y - 3);
   ctx.strokeStyle = '#e9ded2';
   ctx.lineWidth = 1.2;
   ctx.stroke();
+  ctx.restore();
 }
 
 function yarn(ctx, g, pv) {
@@ -521,9 +530,11 @@ function heart(ctx, g, pv) {
   ink(ctx, '#f6a5b6', 1.3);
 }
 
-function capOn(ctx, g, col, tip) {
+function capOn(ctx, g, col, tip, dy = 0, k = 1) {
   ctx.save();
-  ctx.translate(g.hat.x, g.hat.y + 1);
+  ctx.translate(g.hat.x, g.hat.y + 1 + dy);
+  ctx.scale(k, k);
+  K = k;
   ctx.beginPath();
   ctx.moveTo(-14, 2);
   ctx.quadraticCurveTo(-8, -12, 4, -15);
@@ -536,6 +547,7 @@ function capOn(ctx, g, col, tip) {
   ctx.beginPath();
   ctx.arc(16.5, -9.5, 2.6, 0, Math.PI * 2);
   ink(ctx, tip);
+  K = 1;
   ctx.restore();
 }
 
@@ -602,6 +614,6 @@ export function propFront(ctx, g, P, outfit) {
   if (p === 'foam') foam(ctx, g, pv);
   if (p === 'heart') big(ctx, g.hat.x, g.top(g.hat.x) - 6, 1.4, () => heart(ctx, g, pv));
   if (p === 'yarn') big(ctx, g.R + 8, g.bot, 1.4, () => yarn(ctx, g, pv));
-  if (p === 'nightcap' && !hatOn) capOn(ctx, g, '#f6a5b6', '#fffaf2');
+  if (p === 'nightcap' && !hatOn) capOn(ctx, g, '#f6a5b6', '#fffaf2', -3, 0.85);
   if (P.lines) motion(ctx, g, pv);
 }

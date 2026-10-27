@@ -19,7 +19,7 @@ export function layout(H) {
     living: { wardrobe: r(0, F - 124, 48, 132), win: r(56, F - 148, 68, 62), tv: r(140, F - 96, 40, 100), gift: r(146, F + 6, 28, 28), sofa: { x: 62, y: F - 18 } },
     kitchen: { fridge: r(0, F - 134, 52, 142), win: r(62, F - 148, 56, 58), bowl: { x: 152, y: F + 50 } },
     bath: { toilet: r(134, F - 60, 46, 72), tub: r(0, F - 40, 72, 54) },
-    bedroom: { win: r(8, F - 150, 54, 62), sw: r(118, F - 76, 22, 28), lamp: r(140, F - 82, 40, 50) },
+    bedroom: { win: r(8, F - 150, 54, 62), sw: r(118, F - 66, 22, 28), lamp: r(140, F - 82, 40, 50) },
   };
 }
 
@@ -189,15 +189,15 @@ function drawLiving(H, L) {
   rr(146, F - 16, 38, 18, 3, '#fff1dd', 1.1);
   el(165, F - 28, 1.8, 1.8, WOOD, 1);
   el(165, F - 7, 1.8, 1.8, WOOD, 1);
-  ln(1.1, INK, 157, F - 84, 150, F - 96);
-  ln(1.1, INK, 165, F - 84, 172, F - 96);
-  el(150, F - 96, 1.6, 1.6, PINK, 1);
-  el(172, F - 96, 1.6, 1.6, PINK, 1);
-  rr(143, F - 86, 36, 34, 7, MINT, 1.3);
-  rr(147, F - 82, 24, 26, 5, '#61707f', 1.1);
-  ln(1.2, '#8c9cad', 150, F - 78, 154, F - 78);
-  el(175, F - 75, 1.5, 1.5, '#fff', 0.9);
-  el(175, F - 68, 1.5, 1.5, '#fff', 0.9);
+  ln(1.1, INK, 157, F - 82, 150, F - 94);
+  ln(1.1, INK, 165, F - 82, 172, F - 94);
+  el(150, F - 94, 1.6, 1.6, PINK, 1);
+  el(172, F - 94, 1.6, 1.6, PINK, 1);
+  rr(143, F - 84, 36, 34, 7, MINT, 1.3);
+  rr(147, F - 80, 24, 26, 5, '#61707f', 1.1);
+  ln(1.2, '#8c9cad', 150, F - 76, 154, F - 76);
+  el(175, F - 73, 1.5, 1.5, '#fff', 0.9);
+  el(175, F - 66, 1.5, 1.5, '#fff', 0.9);
   rr(156, F + 6, 22, 9, 3, '#f3eef8', 1.1);
   el(173, F + 10.5, 1.2, 1.2, PINK, 0);
   rr(40, F - 60, 100, 48, 15, '#f7a9bd', 1.3);
@@ -335,18 +335,20 @@ function drawBath(H, L) {
     rr(x + w / 2 - 1.5, F - 113 - h, 3, 3, 1, CREAM, 0.8);
   }
   el(118, F - 72, 4, 4, null, 1.1);
+  rr(115, F - 79, 6, 3, 1.5, '#d9e4ec', 1);
   rr(112, F - 68, 12, 24, 3, '#bfe9db', 1.1);
   ln(1, '#ffffff', 112, F - 50, 124, F - 50);
   ln(1.1, INK, 0, F - 132, 74, F - 132);
+  rr(71, F - 136, 6, 8, 2, '#d9e4ec', 1);
   pth(0, F - 131, 'M0 0h20c-4 30 3 58-3 92H0z', '#f9cad5', 1.3);
   for (const [x, y] of [[5, 12], [12, 26], [6, 42], [13, 58], [6, 74]]) el(x, F - 131 + y, 1.6, 1.6, CREAM, 0);
   ln(2.8, INK, 34, F - 108, 34, F - 126, 44, F - 126);
   ln(1.4, '#cfdae3', 34, F - 108, 34, F - 126, 44, F - 126);
   el(34, F - 104, 7, 3.2, '#d9e4ec', 1.2);
+  rr(14, F, 8, 13, 3, BUTTER, 1);
+  rr(50, F, 8, 13, 3, BUTTER, 1);
   pth(-4, F - 34, 'M0 0h78v14c0 14-10 22-22 22H22C10 36 0 28 0 14z', '#ffffff', 1.3);
   rr(-6, F - 40, 82, 8, 4, '#f7fbff', 1.3);
-  rr(6, F + 6, 8, 7, 3, BUTTER, 1);
-  rr(54, F + 6, 8, 7, 3, BUTTER, 1);
   for (const [x, y, rx] of [[8, F - 43, 7], [20, F - 46, 8], [33, F - 43, 6], [44, F - 44, 5]]) el(x, y, rx, rx * 0.65, '#ffffff', 1);
   el(58, F - 45, 6.5, 4.5, BUTTER, 1.1);
   el(62, F - 51, 4, 4, BUTTER, 1.1);
@@ -354,11 +356,12 @@ function drawBath(H, L) {
   el(63, F - 52, 0.8, 0.8, INK, 0);
   rr(127, F - 42, 9, 11, 2, CREAM, 1);
   ln(1.1, INK, 125, F - 42, 138, F - 42);
+  rr(124, F - 46, 14, 3, 1.5, '#d9e4ec', 1);
   const t = L.bath.toilet;
-  rr(t.x + 16, t.y + 2, 28, 24, 6, '#ffffff', 1.3);
-  el(t.x + 30, t.y + 14, 2.2, 2.2, PINK, 0);
-  for (const [dx, dy] of [[-3, -3], [0, -4.2], [3, -3]]) el(t.x + 30 + dx, t.y + 14 + dy, 0.9, 0.9, PINK, 0);
-  rr(t.x + 26, t.y - 1, 8, 3, 1.5, '#d9e4ec', 1);
+  rr(t.x + 7, t.y + 2, 28, 24, 6, '#ffffff', 1.3);
+  el(t.x + 21, t.y + 14, 2.2, 2.2, PINK, 0);
+  for (const [dx, dy] of [[-3, -3], [0, -4.2], [3, -3]]) el(t.x + 21 + dx, t.y + 14 + dy, 0.9, 0.9, PINK, 0);
+  rr(t.x + 17, t.y - 1, 8, 3, 1.5, '#d9e4ec', 1);
   pth(t.x + 4, t.y + 30, 'M0 0h34c0 12-7 18-13 18v8h-8v-8C7 18 0 12 0 0z', '#ffffff', 1.3);
   el(t.x + 21, t.y + 30, 19, 5, '#ffffff', 1.3);
   el(t.x + 21, t.y + 30, 13, 2.6, '#e6f5fd', 1);
@@ -376,12 +379,8 @@ function drawBedroom(H, L) {
   }
   planks(H, F, '#e3d3ef', 'rgba(75,46,30,0.16)');
   baseboard(F);
-  ln(1, INK, 66, F - 176, 122, F - 162, 178, F - 172);
-  for (let i = 0; i < 6; i++) {
-    const x = 74 + i * 18;
-    const y = i < 3 ? F - 174 + i * 4.5 : F - 162 - (i - 3) * 3.5;
-    star(x, y + 4, 0.9, BUTTER, 0.8);
-  }
+  ln(1, INK, 66, F - 148, 92, F - 134, 116, F - 124);
+  for (const [x, y] of [[74, -143.7], [83, -138.9], [92, -134], [101, -130.3], [110, -126.5]]) star(x, F + y, 0.9, BUTTER, 0.8);
   const w = L.bedroom.win;
   windowFrame(w, true);
   pth(w.x + 36, w.y + 15, 'M0-6a6 6 0 1 0 5 9 5 5 0 0 1-5-9z', '#fff3c4', 0.9);
@@ -402,8 +401,8 @@ function drawBedroom(H, L) {
   rr(140, F - 36, 38, 42, 3, '#f6e3c8', 1.3);
   rr(144, F - 28, 30, 14, 3, '#fbeedd', 1);
   el(159, F - 21, 1.6, 1.6, WOOD, 1);
-  rr(156, F - 46, 6, 10, 2, LILAC, 1.1);
-  rr(122, F - 72, 12, 17, 2.5, CREAM, 1.1);
+  rr(156, F - 60, 6, 24, 2, LILAC, 1.1);
+  rr(122, F - 62, 12, 17, 2.5, CREAM, 1.1);
   el(90, F + 44, 62, 16, LILAC, 1.3);
   el(90, F + 41, 50, 11, '#f5eeff', 1.1);
   el(30, F + 40, 6, 6, '#f9b4c6', 1.1);
@@ -483,8 +482,8 @@ export function drawLife(ctx, name, L, t, f) {
   const F = L.F;
   if (name === 'living') {
     clouds(L.living.win, t);
-    ln(1, INK, 2, F - 152, 50, F - 138, 90, F - 146, 130, F - 138, 178, F - 152);
-    const pts = [[8, -149], [20, -145], [32, -141], [44, -139], [62, -141], [76, -144], [90, -145], [104, -144], [118, -141], [136, -139], [148, -141], [160, -145], [172, -149]];
+    ln(1, INK, 46, F - 150, 68, F - 141, 90, F - 146, 112, F - 141, 134, F - 150);
+    const pts = [[50, -147.4], [58, -144.1], [68, -140], [79, -142.5], [90, -145], [101, -142.5], [112, -140], [122, -144.1], [130, -147.4]];
     pts.forEach(([x, dy], i) => {
       const lit = f.still || (Math.floor(t * 2) + i) % 3 !== 0;
       el(x, F + dy + 3, 2.4, 2.8, lit ? BULBS[i % 5] : '#ece2e6', 0.9);
@@ -495,9 +494,9 @@ export function drawLife(ctx, name, L, t, f) {
       }
     });
     if (f.tvOn) {
-      rr(147, F - 82, 24, 26, 5, '#2f2b52', 1.1);
-      for (let i = 0; i < 5; i++) el(150 + ((i * 7 + t * 18) % 18), F - 78 + ((i * 5) % 16), 1.6, 1.6, BULBS[i], 0);
-      el(159 + Math.sin(t * 6) * 5, F - 63, 2.4, 2.4, '#fff', 0.8);
+      rr(147, F - 80, 24, 26, 5, '#2f2b52', 1.1);
+      for (let i = 0; i < 5; i++) el(150 + ((i * 7 + t * 18) % 18), F - 76 + ((i * 5) % 16), 1.6, 1.6, BULBS[i], 0);
+      el(159 + Math.sin(t * 6) * 5, F - 61, 2.4, 2.4, '#fff', 0.8);
     }
     if (f.gift) drawGift(L.living.gift, t, f.giftOpen);
   } else if (name === 'kitchen') {
@@ -534,7 +533,7 @@ export function drawLife(ctx, name, L, t, f) {
     c.globalAlpha = 1;
   } else if (name === 'bedroom') {
     stars(L, t);
-    rr(126.5, F - 68 + (f.dark ? 6 : 0), 3, 5, 1.2, PINK, 0.8);
+    rr(126.5, F - 58 + (f.dark ? 6 : 0), 3, 5, 1.2, PINK, 0.8);
     lamp(F, f.dark);
   }
 }

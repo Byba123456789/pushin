@@ -13,26 +13,39 @@ function ink(ctx, fill, lw = 1.3) {
   ctx.stroke();
 }
 
-function neckPath(g, ctx) {
+const lying = (g, P) => g.body === 'back' || !!P.rest;
+
+function neckPath(g, ctx, dy = 0) {
   const [a, b, c] = g.neck;
-  ctx.moveTo(a[0], a[1]);
-  ctx.quadraticCurveTo(b[0], b[1], c[0], c[1]);
+  ctx.moveTo(a[0], a[1] + dy);
+  ctx.quadraticCurveTo(b[0], b[1] + dy, c[0], c[1] + dy);
 }
 
-function sweater(ctx, g) {
-  const [a, , c] = g.neck;
+function sweater(ctx, g, P) {
   const far = 200;
   const side = g.body === 'back';
+  const collar = lying(g, P) && !side;
+  const h = g.head;
+  const [a, c] = collar ? [[h.x - h.rx, h.y], [h.x + h.rx, h.y]] : [g.neck[0], g.neck[2]];
+  const hem = collar ? g.bot - 1 : g.hem;
+  const edge = (dy = 0) => {
+    if (!collar) return neckPath(g, ctx, dy);
+    ctx.moveTo(a[0], a[1]);
+    ctx.ellipse(h.x, h.y + dy, h.rx, h.ry, 0, Math.PI, 0, true);
+  };
   ctx.beginPath();
-  neckPath(g, ctx);
+  edge();
   if (side) {
-    ctx.lineTo(c[0] + far, c[1]);
-    ctx.lineTo(a[0] + far, a[1]);
+    ctx.lineTo(c[0], c[1] + far);
+    ctx.lineTo(a[0] + far, c[1] + far);
+    ctx.lineTo(a[0] + far, a[1] - far);
+    ctx.lineTo(a[0], a[1] - far);
   } else {
     ctx.lineTo(c[0] + far, c[1]);
-    ctx.lineTo(c[0] + far, g.hem);
-    ctx.lineTo(a[0] - far, g.hem);
-    ctx.lineTo(a[0] - far, a[1]);
+    ctx.lineTo(c[0] + far, hem);
+    ctx.lineTo(a[0] - far, hem);
+    ctx.lineTo(a[0] - far, collar ? a[1] - far : a[1]);
+    if (collar) ctx.lineTo(a[0], a[1] - far);
   }
   ctx.closePath();
   ctx.fillStyle = '#f6b5c9';
@@ -42,18 +55,18 @@ function sweater(ctx, g) {
   ctx.strokeStyle = '#ec92b2';
   ctx.lineWidth = 1;
   ctx.lineCap = 'round';
-  for (let y = g.hem - 3.6; y < g.hem; y += 10) {
+  for (let y = hem - 3.6; !side && y < hem; y += 10) {
     for (let x = g.cx - 60; x < g.cx + 60; x += 2.2) {
       ctx.beginPath();
-      ctx.moveTo(x, g.hem - 3.4);
-      ctx.lineTo(x, g.hem - 0.6);
+      ctx.moveTo(x, hem - 3.4);
+      ctx.lineTo(x, hem - 0.6);
       ctx.stroke();
     }
   }
   const cx = g.face.x;
   for (const dx of [-3.2, 3.2]) {
     ctx.beginPath();
-    for (let y = g.neck[1][1] - 2; y < g.hem - 4; y += 3.4) {
+    for (let y = g.neck[1][1] - 2; y < hem - 4; y += 3.4) {
       ctx.moveTo(cx + dx - 1.6 * Math.sign(dx), y);
       ctx.quadraticCurveTo(cx + dx + 1.8 * Math.sign(dx), y + 1.7, cx + dx - 1.6 * Math.sign(dx), y + 3.4);
     }
@@ -63,18 +76,16 @@ function sweater(ctx, g) {
   ctx.strokeStyle = LINE;
   ctx.lineWidth = 1.3;
   ctx.beginPath();
-  neckPath(g, ctx);
+  edge();
   if (!side) {
-    ctx.moveTo(a[0] - far, g.hem);
-    ctx.lineTo(c[0] + far, g.hem);
+    ctx.moveTo(a[0] - far, hem);
+    ctx.lineTo(c[0] + far, hem);
   }
   ctx.stroke();
   ctx.strokeStyle = '#fbd3e0';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  const [, b] = g.neck;
-  ctx.moveTo(a[0], a[1] + 1.8);
-  ctx.quadraticCurveTo(b[0], b[1] + 1.8, c[0], c[1] + 1.8);
+  edge(1.8);
   ctx.stroke();
 }
 
@@ -119,13 +130,13 @@ function scarfBand(ctx, g) {
   ctx.restore();
 }
 
-function scarfEnd(ctx, g) {
+function scarfEnd(ctx, g, P) {
   const [, b, c] = g.neck;
   const x = (b[0] + c[0]) / 2 + 2;
   const y = (b[1] + c[1]) / 2 + 2;
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(0.18);
+  ctx.rotate(g.body === 'back' ? -Math.PI / 2 : P.rest ? Math.PI / 2 : 0.18);
   ctx.beginPath();
   ctx.roundRect(-2.8, 0, 5.6, 11, 1.4);
   ink(ctx, '#a8e2d2');
@@ -325,8 +336,8 @@ function chefHat(ctx, g) {
   });
 }
 
-function beanie(ctx, g) {
-  const w = g.ears.length === 2 ? Math.abs(g.ears[1].base[0] - g.ears[0].base[0]) / 2 + 10 : 16;
+function beanie(ctx, g, P) {
+  const w = (g.ears.length === 2 ? Math.abs(g.ears[1].base[0] - g.ears[0].base[0]) / 2 + 10 : 16) - (P.prop === 'nightcap' ? 3 : 0);
   hatAt(ctx, g, () => {
     ctx.beginPath();
     ctx.moveTo(-w, 2.5);
@@ -348,7 +359,7 @@ function beanie(ctx, g) {
 
 function horn(ctx, g) {
   hatAt(ctx, g, () => {
-    ctx.translate(3, -1);
+    ctx.translate(3, g.body === 'back' ? 2.5 : -1);
     ctx.rotate(0.22);
     ctx.beginPath();
     ctx.moveTo(-3.2, 1.5);
@@ -368,6 +379,15 @@ function horn(ctx, g) {
 }
 
 function mane(ctx, g) {
+  if (g.body === 'back') {
+    for (let k = 4; k >= 0; k--) {
+      const y = g.hat.y + 3 + k * 3.8;
+      ctx.beginPath();
+      ctx.ellipse(g.edge(y, -1) + 1.5, y, 4, 3.2, -0.5, 0, Math.PI * 2);
+      ink(ctx, RAINBOW[k], 1.2);
+    }
+    return;
+  }
   if (!g.ears.length) return;
   const back = g.ears.length ? g.ears[0].base[0] - 5 : g.face.x - 18;
   for (let k = 4; k >= 0; k--) {
@@ -398,14 +418,15 @@ export function unicornFur(ctx, g, pal) {
 
 export function outfitUnder(ctx, g, P, pal, o) {
   if (!o) return;
-  if (o.body === 'sweater') sweater(ctx, g);
+  if (o.body === 'sweater') sweater(ctx, g, P);
+  if (o.eyes === 'heart_glasses') g.hideBrows = true;
 }
 
 export function outfitOver(ctx, g, P, pal, o) {
   if (!o) return;
   if (o.body === 'scarf') {
     scarfBand(ctx, g);
-    scarfEnd(ctx, g);
+    scarfEnd(ctx, g, P);
   }
   if (o.body === 'bowtie') bowtie(ctx, g);
   if (o.body === 'unicorn') {
@@ -413,12 +434,14 @@ export function outfitOver(ctx, g, P, pal, o) {
     horn(ctx, g);
   }
   if (o.eyes) glasses(ctx, g, o.eyes);
-  if (o.head === 'bow' && g.ears.length) {
+  const hat = o.head && P.prop !== 'phones';
+  if (hat && o.head === 'bow' && g.ears.length) {
     const e = g.ears[1];
     bowShape(ctx, e.base[0] + 3, e.base[1] - 3, 0.85, '#f6a5b6', '#e07a98', 0.35);
   }
-  if (o.head === 'party_hat') partyHat(ctx, g);
-  if (o.head === 'crown') crown(ctx, g);
-  if (o.head === 'chef_hat') chefHat(ctx, g);
-  if (o.head === 'beanie') beanie(ctx, g);
+  if (hat && o.head === 'bow' && g.body === 'back') inFace(ctx, g, () => bowShape(ctx, 14, -10, 0.85, '#f6a5b6', '#e07a98', 0.35));
+  if (hat && o.head === 'party_hat') partyHat(ctx, g);
+  if (hat && o.head === 'crown') crown(ctx, g);
+  if (hat && o.head === 'chef_hat') chefHat(ctx, g);
+  if (hat && o.head === 'beanie') beanie(ctx, g, P);
 }

@@ -83,18 +83,23 @@ export function createRainbow(headX, still) {
   let acc = 0;
   let time = 0;
   const BAND = 2.2;
+  const SMOOTH = 3;
+  const TANGENT = 3;
+  const clampIndex = (i) => Math.max(0, Math.min(len - 1, i));
 
   const pts = Array.from({ length: len }, () => ({ x: 0, y: 0, nx: 0, ny: 0 }));
 
   const layout = () => {
     for (let i = 0; i < len; i++) {
       const p = pts[i];
+      let sum = 0;
+      for (let k = -SMOOTH; k <= SMOOTH; k++) sum += ys[clampIndex(i + k)];
       p.x = headX - i * 2;
-      p.y = ys[i] + Math.sin((pushed - i) * 0.45) * 2;
+      p.y = sum / (SMOOTH * 2 + 1) + Math.sin((pushed - i) * 0.45) * 2;
     }
     for (let i = 0; i < len; i++) {
-      const a = pts[Math.max(0, i - 1)];
-      const b = pts[Math.min(len - 1, i + 1)];
+      const a = pts[clampIndex(i - TANGENT)];
+      const b = pts[clampIndex(i + TANGENT)];
       const tx = b.x - a.x;
       const ty = b.y - a.y;
       const l = Math.hypot(tx, ty) || 1;

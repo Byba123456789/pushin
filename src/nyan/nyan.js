@@ -20,6 +20,7 @@ const COMBO_WINDOW = 3;
 const MAX_LIVES = 3;
 const HUD_HEIGHT_CSS = 80;
 const CAT_WIDTH = 54;
+const RAINBOW_LIFT = 3;
 const POINTS = { coin: 10, cookie: 15, heart: 5, star: 25 };
 const SIZE = {
   coin: [10, 10], cookie: [11, 11], heart: [10, 9], star: [12, 12],
@@ -65,8 +66,9 @@ export function registerNyan() {
   const catScale = () => CAT_WIDTH / (cat.width || CAT_WIDTH);
   const catH = () => (cat.height || 40) * catScale();
   const catW = () => CAT_WIDTH;
-  const minY = () => top() + catH() * 0.3;
-  const maxY = () => H - 6 - catH() * 0.3;
+  const minY = () => top() + catH() / 2 + 2;
+  const maxY = () => H - catH() / 2 - 6;
+  const trailY = () => r.cy - RAINBOW_LIFT;
   const restY = () => clamp(H * 0.45, minY(), maxY());
 
   function fresh() {
@@ -87,7 +89,7 @@ export function registerNyan() {
     cat.outfit = { ...state.get().equipped };
     cat.play('fly', { loop: true });
     r = fresh();
-    rainbow.reset(r.cy);
+    rainbow.reset(trailY());
     fx.clear();
     holding = false;
     setMode('play');
@@ -364,7 +366,7 @@ export function registerNyan() {
       rainbow = createRainbow(CAT_X - 8, calm);
       fx = createParticles();
       r = fresh();
-      rainbow.reset(r.cy);
+      rainbow.reset(trailY());
       holding = false;
       setMode('ready');
       refreshHud();
@@ -392,7 +394,7 @@ export function registerNyan() {
         r.t += dt;
         r.cy = restY() + Math.sin(r.t * 2.2) * 6;
       }
-      rainbow.update(dt, sp, r.cy);
+      rainbow.update(dt, sp, trailY());
       cat.update(dt);
       fx.update(dt);
       refreshHud();

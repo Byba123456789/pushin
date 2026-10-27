@@ -1,4 +1,4 @@
-import { geometry, smooth } from './shape.js';
+import { geometry, inPoly, smooth } from './shape.js';
 import { drawFace } from './face.js';
 import { outfitUnder, outfitOver, unicornFur } from './outfits.js';
 import { propBack, propFront, bowl } from './props.js';
@@ -77,7 +77,6 @@ function frontPaws(ctx, g, P, pal) {
     const y = c.y + d + (P.fpy || 0);
     ctx.beginPath();
     if (P.fp === 'n') ctx.arc(x, y + 1.2, 2.2, Math.PI * 1.05, Math.PI * 1.95);
-    else if (P.fp === 'c') ctx.arc(x, y, 2.2, s < 0 ? Math.PI * 0.4 : -Math.PI * 0.6, s < 0 ? Math.PI * 1.6 : Math.PI * 0.6);
     else {
       ctx.moveTo(x - 2, y - 2.4);
       ctx.lineTo(x - 2, y);
@@ -109,15 +108,53 @@ function legs(ctx, g, [front, back], pal, uni) {
   ctx.restore();
 }
 
-function marks(ctx, g, pal) {
-  ctx.save();
+function capsule(ctx, a, b, w, pal, uni) {
+  ctx.beginPath();
+  ctx.moveTo(a[0], a[1]);
+  ctx.lineTo(b[0], b[1]);
   ctx.strokeStyle = pal.line;
-  ctx.lineWidth = LW * 0.85;
+  ctx.lineWidth = w + LW * 2;
+  ctx.stroke();
+  ctx.strokeStyle = uni ? '#fbf7ff' : pal.fur;
+  ctx.lineWidth = w;
+  ctx.stroke();
+}
+
+function raisedPaws(ctx, g, pal, uni) {
+  ctx.save();
   ctx.lineCap = 'round';
   for (const [x, y] of g.marks) {
-    ctx.beginPath();
-    ctx.arc(x, y, 2.2, Math.PI * 0.4, Math.PI * 1.6);
-    ctx.stroke();
+    let top = y;
+    while (top > y - 60 && inPoly(g.pts, x, top)) top--;
+    capsule(ctx, [x, top + 4], [x, top - 5], 6, pal, uni);
+  }
+  ctx.restore();
+}
+
+function frontArms(ctx, g, P, pal, uni) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (const r of [P.pL, P.pR]) {
+    if (!r) continue;
+    const tip = [g.face.x + r[0], g.face.y + r[1]];
+    if (!inPoly(g.pts, tip[0], tip[1])) continue;
+    const side = Math.sign(r[0]) || 1;
+    const sy = tip[1] - 7;
+    const sx = side > 0 ? Math.min(tip[0] + 9, g.edge(sy, side) - 1) : Math.max(tip[0] - 9, g.edge(sy, side) + 1);
+    capsule(ctx, [sx, sy], tip, 6.4, pal, uni);
+    paw(ctx, tip[0], tip[1], pal, 4, r[2]);
+  }
+  ctx.restore();
+}
+
+function arms(ctx, g, P, pal, uni) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (const r of [P.pL, P.pR]) {
+    if (!r) continue;
+    const tip = [g.face.x + r[0], g.face.y + r[1]];
+    if (inPoly(g.pts, tip[0], tip[1])) continue;
+    capsule(ctx, [g.face.x + Math.sign(r[0]) * 8, g.face.y + 16], tip, 7, pal, uni);
   }
   ctx.restore();
 }
@@ -131,6 +168,7 @@ export function drawCat(ctx, P, pal, outfit, dirt) {
   propBack(ctx, g, P);
   if (!g.tail.front) tail(ctx, g.tail, pal, uni);
   if (P.legs) legs(ctx, g, P.legs, pal, uni);
+  arms(ctx, g, P, pal, uni);
 
   const union = smooth(g.pts);
   ctx.lineJoin = 'round';
@@ -204,14 +242,14 @@ export function drawCat(ctx, P, pal, outfit, dirt) {
   if (g.tail.front) tail(ctx, g.tail, pal, uni);
   drawFace(ctx, g, P, pal, LW);
   frontPaws(ctx, g, P, pal);
-  marks(ctx, g, pal);
+  raisedPaws(ctx, g, pal, uni);
   outfitOver(ctx, g, P, pal, outfit);
   propFront(ctx, g, P, outfit);
-  for (const r of [P.pL, P.pR]) if (r) paw(ctx, g.face.x + r[0], g.face.y + r[1], pal, 4, r[2]);
+  frontArms(ctx, g, P, pal, uni);
   ctx.restore();
   if (P.prop === 'bowl') {
-    const f = m.transformPoint({ x: g.face.x, y: g.face.y });
-    const bx = f.x + (P.dip ? 5 : 24);
+    const front = Math.max(...g.pts.map(([x, y]) => m.transformPoint({ x, y }).x));
+    const bx = P.dip ? front - 2 : m.transformPoint({ x: g.face.x, y: g.face.y }).x + 24;
     ctx.save();
     ctx.translate(bx, 0);
     ctx.scale(1.7, 1.7);
