@@ -1,6 +1,8 @@
 {
   "needs": ["food", "clean", "energy", "fun", "potty"],
   "decayPerHour": { "food": 6, "clean": 3, "energy": 5, "fun": 5, "potty": 4 },
+  "dayEnergyFactor": 0.2,
+  "night": { "from": 22, "to": 8 },
   "sleepEnergyPerHour": 25,
   "offlineFactor": 0.4,
   "floor": 15,

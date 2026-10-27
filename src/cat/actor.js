@@ -7,6 +7,7 @@ const BLINKS = { dot: 'closed', half: 'closed', big: 'closed' };
 const ICONS = new Set(['food', 'clean', 'energy', 'fun', 'potty']);
 const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const rand = (a, b) => a + Math.random() * (b - a);
+const TURN_SPEED = 12;
 
 export function createActor({ pal, size = 1, outfits = true }) {
   let anim = 'idle';
@@ -26,7 +27,11 @@ export function createActor({ pal, size = 1, outfits = true }) {
   let icon = null;
   let iconT = 0;
   let last = null;
+  let turn = 1;
   const parts = [];
+
+  // разворот плавный: масштаб по X идёт от -1 к 1 через узкую полоску
+  const face = () => (Math.abs(turn) < 0.05 ? 0.05 * (turn < 0 ? -1 : 1) : turn);
 
   const table = () => {
     if (anim !== 'idle') return frames;
@@ -44,14 +49,14 @@ export function createActor({ pal, size = 1, outfits = true }) {
   }
 
   function matrix(x, y, p, g, s) {
-    const dir = a.facing * (p.flip || 1);
+    const dir = face() * (p.flip || 1);
     return new DOMMatrix().translate(x, y).scale(s * dir, s).translate(0, p.oy || 0).multiply(g.m);
   }
 
   function anchors() {
     if (!last) return null;
     const { g, p, s } = last;
-    const dir = a.facing * (p.flip || 1);
+    const dir = face() * (p.flip || 1);
     const m = new DOMMatrix().scale(dir * size, size).translate(0, p.oy || 0).multiply(g.m);
     const at = (x, y) => {
       const q = m.transformPoint({ x, y });
@@ -103,6 +108,8 @@ export function createActor({ pal, size = 1, outfits = true }) {
 
     update(dt) {
       clock += dt;
+      const gap = a.facing - turn;
+      turn = reduced || Math.abs(gap) <= dt * TURN_SPEED ? a.facing : turn + Math.sign(gap) * dt * TURN_SPEED;
       const t = table();
       if (idx >= t.length) idx = 0;
       ft += dt * 1000;
@@ -156,7 +163,7 @@ export function createActor({ pal, size = 1, outfits = true }) {
     draw(ctx, x, y, { scale = 1 } = {}) {
       const p = pose();
       const s = scale * size;
-      const dir = a.facing * (p.flip || 1);
+      const dir = face() * (p.flip || 1);
       const dirt = Math.max(0, Math.min(1, a.dirt || 0));
       ctx.save();
       ctx.translate(x, y);

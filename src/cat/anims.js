@@ -48,7 +48,7 @@ export const SLEEP = [f(450, SL), f(150, { ...SL, sh: -0.8, tail: -172 }), f(450
 
 const run = [0, 1, 2, 3, 4, 5].map((k) => {
   const ph = (k / 6) * PI * 2;
-  const leg = (o) => [Math.cos(ph + o) * 3, Math.max(0, Math.sin(ph + o)) * 2.4];
+  const leg = (o) => [-Math.cos(ph + o) * 3, Math.max(0, Math.sin(ph + o)) * 2.4];
   return f(k % 3 === 0 ? 90 : 70, {
     pw: [leg(0), leg(PI), leg(PI * 0.9), leg(PI * 1.9)],
     oy: [0, -2, -1.2, 0, -2, -1.2][k], sh: k % 3 === 0 ? 0.8 : -0.8, ea: 14, tail: -172 + (k % 2) * 8, tw: k % 2 ? -10 : 12,

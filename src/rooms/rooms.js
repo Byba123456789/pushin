@@ -4,7 +4,7 @@ import { createCat } from '../cat/cat.js';
 import { createFriend } from '../cat/friend.js';
 import { sfx, music, setMuted, isMuted } from '../audio/audio.js';
 import { GIFT, FRIENDS } from '../state/catalog.js';
-import { layout, background, drawLife, drawDark, drawScreen, drawShower, drawSponge, drawFoam, drawBowl } from './backgrounds.js';
+import { layout, background, drawLife, drawDark, drawScreen, drawShower, drawSponge, drawFoam, drawBowl, drawBedFront } from './backgrounds.js';
 import { iconImage } from './icons.js';
 import { createUI } from './ui.js';
 import { t, friendLabel, userName, phrases, scenes } from './strings.js';
@@ -18,6 +18,7 @@ const FRIEND = FRIENDS[0];
 const FRIEND_SCALE = 0.85;
 const MISS_MS = 8 * 3600 * 1000;
 const SLIDE = 0.4;
+const BED_SINK = 6;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const tg = window.Telegram && window.Telegram.WebApp;
 const cat = createCat();
@@ -171,6 +172,12 @@ function burst(kind, x, y, n) {
       col: kind === 'crumbs' ? (i % 2 ? '#e9b47a' : '#8a5a3b') : kind === 'drops' ? '#8fd0f5' : CONFETTI[i % CONFETTI.length],
     });
   }
+}
+
+function stopWalk() {
+  if (!walk) return;
+  walk = null;
+  cat.play('idle');
 }
 
 function walkTo(x, cb) {
@@ -515,7 +522,7 @@ function tapObject(p) {
 function toggleFridge() {
   if (!fridgeOpen && !free()) return;
   fridgeOpen = !fridgeOpen;
-  walk = null;
+  if (!busy) stopWalk();
   if (fridgeOpen) ui.dev(false);
   ui.fridge(fridgeOpen);
   refreshActions();
@@ -526,7 +533,7 @@ function toggleFridge() {
 function toggleWardrobe() {
   if (!wardrobeOpen && !free()) return;
   wardrobeOpen = !wardrobeOpen;
-  walk = null;
+  if (!busy) stopWalk();
   if (wardrobeOpen) ui.dev(false);
   ui.wardrobe(wardrobeOpen);
   refreshActions();
@@ -537,7 +544,7 @@ function toggleWardrobe() {
 function toggleSponge() {
   if (tool !== 'sponge' && !free()) return;
   tool = tool ? null : 'sponge';
-  walk = null;
+  if (!busy) stopWalk();
   if (tool) hint('spongeHint');
   refreshActions();
   haptic();
@@ -631,6 +638,8 @@ function toggleLight() {
   else sleep();
 }
 
+const bedCenter = () => L.bedroom.bed.x + L.bedroom.bed.w / 2;
+
 function sleep() {
   if (busy) {
     hint('busy');
@@ -641,7 +650,7 @@ function sleep() {
   refreshActions();
   sfx('tap');
   haptic();
-  walkTo(90, guard(() => {
+  walkTo(bedCenter(), guard(() => {
     busy = null;
     state.setSleeping(true);
     cat.sleeping = true;
@@ -1059,7 +1068,10 @@ function pointer(type, p) {
 function idleAction(s) {
   const r = Math.random();
   const poses = POSES[room];
-  if (poses.length && r < 0.35) {
+  if (state.wantsSleep() && r < 0.4) {
+    cat.play('yawn');
+    sfx('yawn');
+  } else if (poses.length && r < 0.35) {
     const a = poses[Math.floor(Math.random() * poses.length)];
     cat.play(a, { loop: true });
     after(6 + Math.random() * 4, () => {
@@ -1119,7 +1131,8 @@ function update(dt) {
       if (cb) cb();
     } else catX += Math.sign(walk.x - catX) * step;
   }
-  const target = Math.min(H - 70, floorLimit);
+  const bed = L.bedroom.bed;
+  const target = Math.min(s.sleeping && room === 'bedroom' ? bed.y + bed.h - BED_SINK : H - 70, floorLimit);
   catY = catY && !reduced.matches ? catY + (target - catY) * Math.min(1, dt * 10) : target;
   cat.mood = state.mood();
   cat.dirt = s.needs.clean < 40 ? 1 - s.needs.clean / 100 : 0;
@@ -1250,6 +1263,7 @@ function draw(ctx) {
     drawRoomAt(ctx, room, slide.dir * (1 - k) * W);
   } else drawRoomAt(ctx, room, 0);
   if (!catHidden) cat.draw(ctx, catX, catY);
+  if (!slide && room === 'bedroom' && state.get().sleeping) drawBedFront(ctx, L);
   for (const f of foam) drawFoam(ctx, catX + f.dx, catY + f.dy, f.s);
   if (screen) drawScreen(ctx, L);
   if (shower) drawShower(ctx, catX, catY - cat.height - 14, catY, time);

@@ -127,12 +127,33 @@ function readRemote() {
   });
 }
 
+export const isNight = (ms = clock()) => {
+  const h = new Date(ms).getHours();
+  return h >= rules.night.from || h < rules.night.to;
+};
+
+// доля ночи в промежутке, по часовым отрезкам локального времени
+function nightShare(fromMs, toMs) {
+  let night = 0;
+  for (let t = fromMs; t < toMs;) {
+    const next = Math.min(new Date(t).setMinutes(60, 0, 0), toMs);
+    if (isNight(t)) night += next - t;
+    t = next;
+  }
+  return night / (toMs - fromMs);
+}
+
+// просьба о сне имеет смысл только ночью
+const asks = (k) => k !== 'energy' || isNight();
+
+export const wantsSleep = () => isNight() && s.needs.energy < rules.wantAt;
+
 function signature() {
   return rules.needs.map((k) => Math.round(s.needs[k])).join() + mood() + s.sleeping;
 }
 
 function refreshUrgent() {
-  const urgent = rules.needs.some((k) => s.needs[k] < rules.urgentAt);
+  const urgent = rules.needs.some((k) => asks(k) && s.needs[k] < rules.urgentAt);
   urgentSince = urgent ? (urgentSince ?? clock()) : null;
 }
 
@@ -158,12 +179,13 @@ function wake() {
   if (rested) addXp(XP.sleep);
 }
 
-function advance(hours) {
+function advance(hours, night = Number(isNight())) {
   for (const k of rules.needs) {
     if (s.sleeping && k === 'energy') {
       s.needs.energy = clamp(s.needs.energy + rules.sleepEnergyPerHour * hours);
     } else if (s.needs[k] > rules.floor) {
-      const rate = rules.decayPerHour[k] * (s.sleeping ? 0.5 : 1);
+      const dayFactor = k === 'energy' ? night + (1 - night) * rules.dayEnergyFactor : 1;
+      const rate = rules.decayPerHour[k] * (s.sleeping ? 0.5 : 1) * dayFactor;
       s.needs[k] = Math.max(rules.floor, s.needs[k] - rate * hours);
     }
   }
@@ -178,7 +200,8 @@ export async function load() {
   awayMs = saved ? Math.max(clock() - s.lastSeen, 0) : 0;
   if (saved) {
     const hours = Math.min(awayMs / HOUR_MS, rules.maxOfflineHours);
-    advance(hours * rules.offlineFactor);
+    const end = clock();
+    advance(hours * rules.offlineFactor, hours > 0 ? nightShare(end - hours * HOUR_MS, end) : 0);
   }
   s.lastSeen = clock();
   if (!watching && globalThis.document) {
@@ -322,7 +345,7 @@ export function devReset() {
 
 export function wants() {
   return rules.needs
-    .filter((k) => s.needs[k] < rules.wantAt)
+    .filter((k) => asks(k) && s.needs[k] < rules.wantAt)
     .sort((a, b) => s.needs[a] - s.needs[b])
     .map((need) => ({ need, level: s.needs[need] < rules.urgentAt ? 'urgent' : 'want' }));
 }
@@ -331,7 +354,7 @@ export function mood() {
   const n = s.needs;
   if (n.potty < rules.urgentAt) return 'potty';
   if (n.clean < rules.wantAt) return 'dirty';
-  if (n.energy < rules.urgentAt) return 'tired';
+  if (n.energy < rules.urgentAt && isNight()) return 'tired';
   if (urgentSince !== null && clock() - urgentSince > ANGRY_AFTER_MS) return 'angry';
   if (wants().length) return 'sad';
   if (rules.needs.every((k) => n[k] > 70)) return 'happy';
