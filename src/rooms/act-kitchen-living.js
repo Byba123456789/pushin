@@ -362,9 +362,9 @@ export function drawPlant(ctx, plant, now, look) {
     c.restore();
   });
   if (look.bloom > 0) flower(x + Math.sin(wig * 8) * 1.2, base - lerp(10, 22, look.lift), look.bloom);
-  pth('M-8 0h16l-2.4 12h-11.2z', PINK, 1.2);
   c.save();
   c.translate(x, base);
+  pth('M-8 0h16l-2.4 12h-11.2z', PINK, 1.2);
   rr(-9.2, -1, 18.4, 3.6, 1.5, '#f9bccb', 1.1);
   ln(0.8, 'rgba(255,255,255,0.6)', -5, 4.6, -4, 9.5);
   ln(0.6, '#e58aa3', -5.4, 7, 5.4, 7);

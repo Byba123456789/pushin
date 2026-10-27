@@ -436,15 +436,11 @@ function book(ctx, g, pv) {
   ink(ctx, '#e8566e', 0.8);
   if (pv % 2) {
     ctx.beginPath();
-    ctx.moveTo(0, -24);
-    ctx.quadraticCurveTo(5, -30, 9, -26);
-    ctx.lineTo(9, -3);
-    ctx.quadraticCurveTo(5, -6, 0, -1);
+    ctx.moveTo(-6, -23.6);
+    ctx.quadraticCurveTo(-1, -31, 6, -27.4);
+    ctx.quadraticCurveTo(3, -25.6, 4, -23.6);
     ctx.closePath();
-    ink(ctx, '#fffaf2', 1.1);
-    seg(ctx, 2, -19, 7, -19.6, '#e4d6c4', 0.6);
-    seg(ctx, 2, -16.4, 7, -17, '#e4d6c4', 0.6);
-    seg(ctx, 2, -13.8, 6, -14.2, '#e4d6c4', 0.6);
+    ink(ctx, '#fffaf2', 1);
   }
   ctx.restore();
 }
