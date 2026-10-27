@@ -1,10 +1,10 @@
-import { FOOD, OUTFITS, XP, DAILY_BONUS, GIFT, HOME_ACTS, WATER_GAP_HOURS, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
+import { FOOD, OUTFITS, XP, DAILY_BONUS, GIFT, HOME_ACTS, WATER_GAP_HOURS, ACT_XP_GAP_MIN, xpToNext, xpAtLevel, levelAtXp } from './catalog.js';
 
 const KEY = 'pushin.v1';
 const SAVE_DELAY_MS = 2000;
 const AUTOSAVE_MS = 30000;
 const CLOUD_TIMEOUT_MS = 5000;
-const PET_XP_GAP_MS = 3000;
+const PET_XP_GAP_MS = 60000;
 const ANGRY_AFTER_MS = 30 * 60 * 1000;
 const FULL_FOOD = 98;
 const SCHEMA = 2;
@@ -32,7 +32,7 @@ const freshState = () => ({
   coins: 50, xp: 0, level: 1, owned: [], equipped: { head: null, eyes: null, body: null },
   sleeping: false, feeds: 0, best: 0, giftSeen: false, streak: 0, lastDaily: null,
   sleptHours: 0, curtainsClosed: false, lastBrush: 0, infCoins: false, friend: { name: null, equipped: { head: null, eyes: null, body: null } },
-  wateredAt: 0, lastSeen: clock(), version: 1, schema: SCHEMA,
+  wateredAt: 0, actXpAt: {}, lastSeen: clock(), version: 1, schema: SCHEMA,
 });
 
 let s = freshState();
@@ -95,6 +95,7 @@ const normalize = (x) => {
     ...f, ...x, xp,
     needs: { ...f.needs, ...x.needs },
     equipped: { ...f.equipped, ...x.equipped },
+    actXpAt: { ...x.actXpAt },
     friend: { ...f.friend, ...x.friend, equipped: { ...f.friend.equipped, ...x.friend?.equipped } },
     version: 1, schema: SCHEMA,
   };
@@ -162,6 +163,13 @@ function changed() {
   refreshUrgent();
   emit('change');
   schedule();
+}
+
+function actXp(id, n) {
+  const gone = clock() - (s.actXpAt[id] ?? -Infinity);
+  if (gone >= 0 && gone < ACT_XP_GAP_MIN * 60000) return;
+  s.actXpAt[id] = clock();
+  addXp(n);
 }
 
 function addXp(n) {
@@ -259,7 +267,7 @@ export function play(amount) {
 
 export function readBook() {
   s.needs.fun = clamp(s.needs.fun + rules.readFun);
-  addXp(XP.read);
+  actXp('read', XP.read);
   changed();
 }
 
@@ -279,7 +287,8 @@ export function homeAct(id) {
   if (!a) return false;
   s.needs.food = clamp(s.needs.food + (a.food ?? 0));
   s.needs.fun = clamp(s.needs.fun + (a.fun ?? 0));
-  addXp(a.xp);
+  if (id === 'water') addXp(a.xp);
+  else actXp(id, a.xp);
   changed();
   return true;
 }
@@ -297,6 +306,7 @@ export function water() {
 
 export function setCurtains(closed) {
   s.curtainsClosed = closed;
+  actXp('curtains', XP.curtains);
   changed();
 }
 

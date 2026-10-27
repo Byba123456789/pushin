@@ -34,12 +34,13 @@ export const OUTFITS = [
   { id: 'wizard_hat', slot: 'head', name: 'Шляпа волшебника', price: 350, level: 6 },
 ];
 
-export const XP = { feed: 5, wash: 5, potty: 3, sleep: 5, play: 10, pet: 1, read: 3, brush: 3 };
+export const XP = { feed: 2, wash: 2, potty: 1, sleep: 5, play: 3, pet: 1, read: 10, brush: 10, curtains: 2 };
+export const ACT_XP_GAP_MIN = 20;
 export const HOME_ACTS = {
-  tea: { food: 8, fun: 4, xp: 2 },
-  snack: { food: 18, fun: 3, xp: 3 },
-  tv: { fun: 12, xp: 5 },
-  water: { fun: 6, xp: 3 },
+  tea: { food: 8, fun: 4, xp: 6 },
+  snack: { food: 18, fun: 3, xp: 6 },
+  tv: { fun: 12, xp: 8 },
+  water: { fun: 6, xp: 12 },
 };
 export const WATER_GAP_HOURS = 4;
 const FIRST_LEVEL_XP = 100;
